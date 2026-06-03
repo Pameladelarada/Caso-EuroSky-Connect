@@ -25,8 +25,12 @@ function getAirportMap(data) {
 }
 
 function routeScore(route) {
+<<<<<<< HEAD
     const weightedCost = route.costo_operativo + route.tasa_aeroportuaria - route.beneficio_neto * 0.12;
     return Math.max(1, weightedCost);
+=======
+    return route.costo_operativo + route.tasa_aeroportuaria - route.beneficio_neto * 0.18;
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
 }
 
 function buildGraph(data) {
@@ -88,6 +92,7 @@ function dijkstra(data, startId, endId) {
         airportIds.unshift(currentId);
     }
 
+<<<<<<< HEAD
     return summarizeRoute(data, airportIds, segments, "Dijkstra");
 }
 
@@ -175,6 +180,12 @@ function runAlgorithm(data, algorithm, startId, endId) {
 }
 
 function summarizeRoute(data, airportIds, segments, algoritmo = "Dijkstra") {
+=======
+    return summarizeRoute(data, airportIds, segments);
+}
+
+function summarizeRoute(data, airportIds, segments) {
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
     const airports = getAirportMap(data);
     const secuencia = airportIds.map((id) => airports.get(id)).filter(Boolean);
     const distancia = segments.reduce((sum, route) => sum + route.distancia, 0);
@@ -193,7 +204,10 @@ function summarizeRoute(data, airportIds, segments, algoritmo = "Dijkstra") {
     }));
 
     return {
+<<<<<<< HEAD
         algoritmo,
+=======
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
         secuencia,
         segmentos: segments,
         distancia,
@@ -248,18 +262,44 @@ app.get("/ruta", (req, res) => {
     const data = readData();
     const inicio = Number(req.query.inicio);
     const fin = Number(req.query.fin);
+<<<<<<< HEAD
     const algoritmo = req.query.algoritmo || "dijkstra";
+=======
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
 
     if (!inicio || !fin) {
         return res.status(400).json({ error: "Debe enviar inicio y fin." });
     }
 
+<<<<<<< HEAD
     const result = runAlgorithm(data, algoritmo, inicio, fin);
+=======
+    if (inicio === fin) {
+        const airport = getAirportMap(data).get(inicio);
+        return res.json({
+            secuencia: airport ? [airport] : [],
+            segmentos: [],
+            distancia: 0,
+            tiempo_vuelo_min: 0,
+            tiempo_escala_min: 0,
+            tiempo_total_min: 0,
+            costo_total: 0,
+            ingreso_total: 0,
+            beneficio_neto: 0,
+            escalas: [],
+            cantidad_escalas: 0,
+            dentro_jornada: true
+        });
+    }
+
+    const result = dijkstra(data, inicio, fin);
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
     if (!result) return res.status(404).json({ error: "No existe una ruta conectada." });
 
     res.json(result);
 });
 
+<<<<<<< HEAD
 app.get("/api/comparar", (req, res) => {
     const data = readData();
     const inicio = Number(req.query.inicio);
@@ -277,6 +317,8 @@ app.get("/api/comparar", (req, res) => {
     res.json(resultados);
 });
 
+=======
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
 app.get("/vuelos", (req, res) => {
     res.json(readData().vuelos || []);
 });

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -7,10 +8,21 @@
 #include <unordered_map>
 #include <vector>
 #include "json.hpp"
+=======
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <queue>
+#include <unordered_map>
+#include <set>
+#include <string>
+#include "json.hpp"  // nlohmann/json
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
 
 using json = nlohmann::json;
 using namespace std;
 
+<<<<<<< HEAD
 struct Edge {
     int destino_id;
     double costo;
@@ -49,6 +61,22 @@ vector<int> reconstruirRuta(
     return ruta;
 }
 
+=======
+// Estructura de arista
+struct Edge {
+    int destino_id;
+    double costo; // distancia + costo_operativo
+};
+
+// Nodo para la cola de prioridad de Dijkstra
+struct Nodo {
+    int aeropuerto_id;
+    double costo;
+    bool operator>(const Nodo& other) const { return costo > other.costo; }
+};
+
+// Función Dijkstra
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
 pair<vector<int>, double> dijkstra(
     const unordered_map<int, vector<Edge>>& grafo,
     int inicio,
@@ -58,13 +86,18 @@ pair<vector<int>, double> dijkstra(
     unordered_map<int, int> anterior;
     set<int> visitados;
 
+<<<<<<< HEAD
     for (const auto& nodo : grafo) distancias[nodo.first] = 1e9;
+=======
+    for (auto& nodo : grafo) distancias[nodo.first] = 1e9;
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
     distancias[inicio] = 0;
 
     priority_queue<Nodo, vector<Nodo>, greater<Nodo>> pq;
     pq.push({inicio, 0});
 
     while (!pq.empty()) {
+<<<<<<< HEAD
         Nodo actual = pq.top();
         pq.pop();
 
@@ -73,6 +106,12 @@ pair<vector<int>, double> dijkstra(
         if (actual.aeropuerto_id == fin) break;
 
         if (!grafo.count(actual.aeropuerto_id)) continue;
+=======
+        Nodo actual = pq.top(); pq.pop();
+
+        if (visitados.count(actual.aeropuerto_id)) continue;
+        visitados.insert(actual.aeropuerto_id);
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
 
         for (const Edge& vecino : grafo.at(actual.aeropuerto_id)) {
             double nuevaDist = distancias[actual.aeropuerto_id] + vecino.costo;
@@ -84,6 +123,7 @@ pair<vector<int>, double> dijkstra(
         }
     }
 
+<<<<<<< HEAD
     return {reconstruirRuta(anterior, inicio, fin), distancias[fin]};
 }
 
@@ -174,6 +214,25 @@ void imprimirRuta(
 }
 
 int main() {
+=======
+    // Reconstruir ruta
+    vector<int> ruta;
+    double costo_total = distancias[fin];
+    int actual = fin;
+    while (actual != inicio) {
+        ruta.push_back(actual);
+        actual = anterior[actual];
+    }
+    ruta.push_back(inicio);
+    reverse(ruta.begin(), ruta.end());
+
+    return {ruta, costo_total};
+}
+
+// Función principal
+int main() {
+    // Cargar archivo JSON
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
     ifstream file("data.json");
     if (!file.is_open()) {
         cerr << "No se pudo abrir el archivo data.json" << endl;
@@ -184,6 +243,7 @@ int main() {
     file >> data;
     file.close();
 
+<<<<<<< HEAD
     unordered_map<int, string> idToNombre;
     for (const auto& aeropuerto : data["aeropuertos"]) {
         idToNombre[aeropuerto["id"]] = aeropuerto["nombre"];
@@ -198,10 +258,24 @@ int main() {
         grafo[ruta["origen"]].push_back({ruta["destino"], costo});
     }
 
+=======
+    // Crear map de id a nombre de aeropuerto
+    unordered_map<int, string> idToNombre;
+    for (auto& a : data["aeropuertos"])
+        idToNombre[a["id"]] = a["nombre"];
+
+    // Construir grafo desde JSON
+    unordered_map<int, vector<Edge>> grafo;
+    for (auto& r : data["rutas"])
+        grafo[r["origen"]].push_back({r["destino"], r["distancia"].get<double>() + r["costo_operativo"].get<double>()});
+
+    // Seleccionar primera aeronave
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
     auto aeronave = data["aeronaves"][0];
     cout << "Aeronave seleccionada: " << aeronave["nombre"]
          << " (Capacidad: " << aeronave["capacidad"] << ")\n";
 
+<<<<<<< HEAD
     int inicio_id = 1;
     int fin_id = 11;
 
@@ -219,8 +293,29 @@ int main() {
     double rentabilidad = ingresos - costoTotal;
 
     cout << "Costo total Dijkstra: " << costoTotal
+=======
+    // Definir IDs de origen y destino (ajustar según tu JSON)
+    int inicio_id = 1; // Ejemplo: Lima
+    int fin_id = 5;    // Ejemplo: Moscu
+
+    // Ejecutar Dijkstra
+    auto [ruta, costo_total] = dijkstra(grafo, inicio_id, fin_id);
+
+    // Calcular rentabilidad (ejemplo simple)
+    double ingresos = aeronave["capacidad"].get<int>() * 100; 
+    double rentabilidad = ingresos - costo_total;
+
+    // Mostrar resultados
+    cout << "Ruta óptima: ";
+    for (int id : ruta) cout << idToNombre[id] << " -> ";
+    cout << "\b\b  \nCosto total: " << costo_total
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
          << "\nIngresos estimados: " << ingresos
          << "\nRentabilidad estimada: " << rentabilidad << endl;
 
     return 0;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
