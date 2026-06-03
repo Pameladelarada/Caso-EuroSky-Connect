@@ -1,0 +1,4 @@
+node_modules
+.env
+
+//indicacion para Github para que no suba el API KEY
