@@ -1,0 +1,619 @@
+{
+  "configuracion": {
+    "nombre_aerolinea": "EuroSky Connect",
+    "jornada_maxima_min": 480,
+    "precio_promedio_boleto": 145,
+    "capacidad_maxima_pasajeros": 255,
+    "fuentes": [
+      "https://www.eurail.com/es/plan-your-trip/trip-ideas/suggested-itineraries/european-highlights-itinerary",
+      "https://www.diariodeunmentiroso.com/itinerarios-rutas-europa-coche-tren/"
+    ]
+  },
+  "aeropuertos": [
+    {
+      "id": 1,
+      "nombre": "Paris Charles de Gaulle",
+      "codigo": "CDG",
+      "pais": "Francia",
+      "ciudad": "Paris",
+      "lat": 49.0097,
+      "lng": 2.5479,
+      "atractivo": "Torre Eiffel, Museo del Louvre y conexiones de alta demanda con Versalles."
+    },
+    {
+      "id": 2,
+      "nombre": "Amsterdam Schiphol",
+      "codigo": "AMS",
+      "pais": "Paises Bajos",
+      "ciudad": "Amsterdam",
+      "lat": 52.3105,
+      "lng": 4.7683,
+      "atractivo": "Canales historicos, Rijksmuseum y distrito cultural de Museumplein."
+    },
+    {
+      "id": 3,
+      "nombre": "Berlin Brandenburg",
+      "codigo": "BER",
+      "pais": "Alemania",
+      "ciudad": "Berlin",
+      "lat": 52.3667,
+      "lng": 13.5033,
+      "atractivo": "Puerta de Brandeburgo, Isla de los Museos y vida urbana tecnologica."
+    },
+    {
+      "id": 4,
+      "nombre": "Prague Vaclav Havel",
+      "codigo": "PRG",
+      "pais": "Republica Checa",
+      "ciudad": "Praga",
+      "lat": 50.1008,
+      "lng": 14.26,
+      "atractivo": "Puente de Carlos, Castillo de Praga y casco antiguo medieval."
+    },
+    {
+      "id": 5,
+      "nombre": "Salzburg Airport",
+      "codigo": "SZG",
+      "pais": "Austria",
+      "ciudad": "Salzburgo",
+      "lat": 47.7933,
+      "lng": 13.0043,
+      "atractivo": "Fortaleza Hohensalzburg, ciudad natal de Mozart y acceso alpino."
+    },
+    {
+      "id": 6,
+      "nombre": "Munich Airport",
+      "codigo": "MUC",
+      "pais": "Alemania",
+      "ciudad": "Fussen",
+      "lat": 48.3538,
+      "lng": 11.7861,
+      "atractivo": "Base operacional cercana para visitar Neuschwanstein y la ruta alpina de Baviera."
+    },
+    {
+      "id": 7,
+      "nombre": "Venice Marco Polo",
+      "codigo": "VCE",
+      "pais": "Italia",
+      "ciudad": "Venecia",
+      "lat": 45.5053,
+      "lng": 12.3519,
+      "atractivo": "Gran Canal, Plaza San Marcos y patrimonio insular."
+    },
+    {
+      "id": 8,
+      "nombre": "Florence Peretola",
+      "codigo": "FLR",
+      "pais": "Italia",
+      "ciudad": "Florencia",
+      "lat": 43.81,
+      "lng": 11.2051,
+      "atractivo": "Duomo, Galeria Uffizi y centro del Renacimiento."
+    },
+    {
+      "id": 9,
+      "nombre": "Rome Fiumicino",
+      "codigo": "FCO",
+      "pais": "Italia",
+      "ciudad": "Roma",
+      "lat": 41.8003,
+      "lng": 12.2389,
+      "atractivo": "Coliseo, Foro Romano y conexion directa con Ciudad del Vaticano."
+    },
+    {
+      "id": 10,
+      "nombre": "Nice Cote d'Azur",
+      "codigo": "NCE",
+      "pais": "Francia",
+      "ciudad": "Montecarlo",
+      "lat": 43.6653,
+      "lng": 7.215,
+      "atractivo": "Puerta de entrada a Monaco, Costa Azul y turismo premium."
+    },
+    {
+      "id": 11,
+      "nombre": "Barcelona El Prat",
+      "codigo": "BCN",
+      "pais": "Espana",
+      "ciudad": "Barcelona",
+      "lat": 41.2974,
+      "lng": 2.0833,
+      "atractivo": "Sagrada Familia, arquitectura modernista y costa mediterranea."
+    },
+    {
+      "id": 12,
+      "nombre": "Adolfo Suarez Madrid-Barajas",
+      "codigo": "MAD",
+      "pais": "Espana",
+      "ciudad": "Madrid",
+      "lat": 40.4983,
+      "lng": -3.5676,
+      "atractivo": "Museo del Prado, Plaza Mayor y nodo estrategico con Barcelona y Malaga."
+    },
+    {
+      "id": 13,
+      "nombre": "London Heathrow",
+      "codigo": "LHR",
+      "pais": "Reino Unido",
+      "ciudad": "Londres",
+      "lat": 51.47,
+      "lng": -0.4543,
+      "atractivo": "Big Ben, British Museum y demanda corporativa internacional."
+    },
+    {
+      "id": 14,
+      "nombre": "Brussels Airport",
+      "codigo": "BRU",
+      "pais": "Belgica",
+      "ciudad": "Bruselas",
+      "lat": 50.9014,
+      "lng": 4.4844,
+      "atractivo": "Grand Place, instituciones europeas y escala natural hacia Amsterdam."
+    },
+    {
+      "id": 15,
+      "nombre": "Vienna International",
+      "codigo": "VIE",
+      "pais": "Austria",
+      "ciudad": "Viena",
+      "lat": 48.1103,
+      "lng": 16.5697,
+      "atractivo": "Palacio Schonbrunn, opera y mercados navidenos."
+    },
+    {
+      "id": 16,
+      "nombre": "Tallinn Airport",
+      "codigo": "TLL",
+      "pais": "Estonia",
+      "ciudad": "Tallin",
+      "lat": 59.4133,
+      "lng": 24.8328,
+      "atractivo": "Centro medieval amurallado y puerta del Baltico."
+    },
+    {
+      "id": 17,
+      "nombre": "Riga Airport",
+      "codigo": "RIX",
+      "pais": "Letonia",
+      "ciudad": "Riga",
+      "lat": 56.9236,
+      "lng": 23.9711,
+      "atractivo": "Arquitectura art nouveau, casco historico y turismo baltico."
+    },
+    {
+      "id": 18,
+      "nombre": "Vilnius Airport",
+      "codigo": "VNO",
+      "pais": "Lituania",
+      "ciudad": "Vilna",
+      "lat": 54.6341,
+      "lng": 25.2858,
+      "atractivo": "Casco barroco, colina de Gediminas y rutas culturales del este."
+    },
+    {
+      "id": 19,
+      "nombre": "Warsaw Chopin",
+      "codigo": "WAW",
+      "pais": "Polonia",
+      "ciudad": "Varsovia",
+      "lat": 52.1657,
+      "lng": 20.9671,
+      "atractivo": "Ciudad vieja reconstruida, centros de negocios y conectividad regional."
+    },
+    {
+      "id": 20,
+      "nombre": "Krakow John Paul II",
+      "codigo": "KRK",
+      "pais": "Polonia",
+      "ciudad": "Cracovia",
+      "lat": 50.0777,
+      "lng": 19.7848,
+      "atractivo": "Plaza del Mercado, Wawel y acceso a rutas historicas."
+    }
+  ],
+  "rutas": [
+    {
+      "origen": 1,
+      "destino": 2,
+      "distancia": 430,
+      "tiempo_vuelo_min": 80,
+      "tiempo_escala_min": 45,
+      "costo_operativo": 4800,
+      "tasa_aeroportuaria": 1350,
+      "demanda_esperada": 214,
+      "ingreso_proyectado": 31030,
+      "beneficio_neto": 24880
+    },
+    {
+      "origen": 2,
+      "destino": 3,
+      "distancia": 575,
+      "tiempo_vuelo_min": 85,
+      "tiempo_escala_min": 45,
+      "costo_operativo": 5200,
+      "tasa_aeroportuaria": 1280,
+      "demanda_esperada": 205,
+      "ingreso_proyectado": 29725,
+      "beneficio_neto": 23245
+    },
+    {
+      "origen": 3,
+      "destino": 4,
+      "distancia": 280,
+      "tiempo_vuelo_min": 65,
+      "tiempo_escala_min": 40,
+      "costo_operativo": 3600,
+      "tasa_aeroportuaria": 930,
+      "demanda_esperada": 184,
+      "ingreso_proyectado": 26680,
+      "beneficio_neto": 22150
+    },
+    {
+      "origen": 4,
+      "destino": 5,
+      "distancia": 375,
+      "tiempo_vuelo_min": 70,
+      "tiempo_escala_min": 40,
+      "costo_operativo": 3900,
+      "tasa_aeroportuaria": 870,
+      "demanda_esperada": 172,
+      "ingreso_proyectado": 24940,
+      "beneficio_neto": 20170
+    },
+    {
+      "origen": 5,
+      "destino": 6,
+      "distancia": 145,
+      "tiempo_vuelo_min": 45,
+      "tiempo_escala_min": 35,
+      "costo_operativo": 2600,
+      "tasa_aeroportuaria": 760,
+      "demanda_esperada": 141,
+      "ingreso_proyectado": 20445,
+      "beneficio_neto": 17085
+    },
+    {
+      "origen": 6,
+      "destino": 7,
+      "distancia": 305,
+      "tiempo_vuelo_min": 65,
+      "tiempo_escala_min": 45,
+      "costo_operativo": 3800,
+      "tasa_aeroportuaria": 940,
+      "demanda_esperada": 190,
+      "ingreso_proyectado": 27550,
+      "beneficio_neto": 22810
+    },
+    {
+      "origen": 7,
+      "destino": 8,
+      "distancia": 205,
+      "tiempo_vuelo_min": 55,
+      "tiempo_escala_min": 35,
+      "costo_operativo": 3100,
+      "tasa_aeroportuaria": 820,
+      "demanda_esperada": 176,
+      "ingreso_proyectado": 25520,
+      "beneficio_neto": 21600
+    },
+    {
+      "origen": 8,
+      "destino": 9,
+      "distancia": 240,
+      "tiempo_vuelo_min": 55,
+      "tiempo_escala_min": 40,
+      "costo_operativo": 3300,
+      "tasa_aeroportuaria": 860,
+      "demanda_esperada": 201,
+      "ingreso_proyectado": 29145,
+      "beneficio_neto": 24985
+    },
+    {
+      "origen": 9,
+      "destino": 10,
+      "distancia": 470,
+      "tiempo_vuelo_min": 75,
+      "tiempo_escala_min": 45,
+      "costo_operativo": 4900,
+      "tasa_aeroportuaria": 1210,
+      "demanda_esperada": 188,
+      "ingreso_proyectado": 27260,
+      "beneficio_neto": 21150
+    },
+    {
+      "origen": 10,
+      "destino": 11,
+      "distancia": 500,
+      "tiempo_vuelo_min": 80,
+      "tiempo_escala_min": 45,
+      "costo_operativo": 5100,
+      "tasa_aeroportuaria": 1260,
+      "demanda_esperada": 211,
+      "ingreso_proyectado": 30595,
+      "beneficio_neto": 24235
+    },
+    {
+      "origen": 12,
+      "destino": 11,
+      "distancia": 505,
+      "tiempo_vuelo_min": 75,
+      "tiempo_escala_min": 40,
+      "costo_operativo": 4700,
+      "tasa_aeroportuaria": 1140,
+      "demanda_esperada": 223,
+      "ingreso_proyectado": 32335,
+      "beneficio_neto": 26495
+    },
+    {
+      "origen": 1,
+      "destino": 12,
+      "distancia": 1065,
+      "tiempo_vuelo_min": 125,
+      "tiempo_escala_min": 50,
+      "costo_operativo": 7800,
+      "tasa_aeroportuaria": 1600,
+      "demanda_esperada": 232,
+      "ingreso_proyectado": 33640,
+      "beneficio_neto": 24240
+    },
+    {
+      "origen": 12,
+      "destino": 13,
+      "distancia": 1245,
+      "tiempo_vuelo_min": 145,
+      "tiempo_escala_min": 55,
+      "costo_operativo": 8600,
+      "tasa_aeroportuaria": 2100,
+      "demanda_esperada": 245,
+      "ingreso_proyectado": 35525,
+      "beneficio_neto": 24825
+    },
+    {
+      "origen": 13,
+      "destino": 14,
+      "distancia": 350,
+      "tiempo_vuelo_min": 70,
+      "tiempo_escala_min": 45,
+      "costo_operativo": 4200,
+      "tasa_aeroportuaria": 1300,
+      "demanda_esperada": 208,
+      "ingreso_proyectado": 30160,
+      "beneficio_neto": 24660
+    },
+    {
+      "origen": 14,
+      "destino": 2,
+      "distancia": 175,
+      "tiempo_vuelo_min": 50,
+      "tiempo_escala_min": 35,
+      "costo_operativo": 2800,
+      "tasa_aeroportuaria": 780,
+      "demanda_esperada": 198,
+      "ingreso_proyectado": 28710,
+      "beneficio_neto": 25130
+    },
+    {
+      "origen": 2,
+      "destino": 1,
+      "distancia": 430,
+      "tiempo_vuelo_min": 80,
+      "tiempo_escala_min": 45,
+      "costo_operativo": 4800,
+      "tasa_aeroportuaria": 1350,
+      "demanda_esperada": 214,
+      "ingreso_proyectado": 31030,
+      "beneficio_neto": 24880
+    },
+    {
+      "origen": 3,
+      "destino": 2,
+      "distancia": 575,
+      "tiempo_vuelo_min": 85,
+      "tiempo_escala_min": 45,
+      "costo_operativo": 5200,
+      "tasa_aeroportuaria": 1280,
+      "demanda_esperada": 205,
+      "ingreso_proyectado": 29725,
+      "beneficio_neto": 23245
+    },
+    {
+      "origen": 4,
+      "destino": 3,
+      "distancia": 280,
+      "tiempo_vuelo_min": 65,
+      "tiempo_escala_min": 40,
+      "costo_operativo": 3600,
+      "tasa_aeroportuaria": 930,
+      "demanda_esperada": 184,
+      "ingreso_proyectado": 26680,
+      "beneficio_neto": 22150
+    },
+    {
+      "origen": 15,
+      "destino": 4,
+      "distancia": 275,
+      "tiempo_vuelo_min": 60,
+      "tiempo_escala_min": 40,
+      "costo_operativo": 3500,
+      "tasa_aeroportuaria": 890,
+      "demanda_esperada": 193,
+      "ingreso_proyectado": 27985,
+      "beneficio_neto": 23595
+    },
+    {
+      "origen": 4,
+      "destino": 15,
+      "distancia": 275,
+      "tiempo_vuelo_min": 60,
+      "tiempo_escala_min": 40,
+      "costo_operativo": 3500,
+      "tasa_aeroportuaria": 890,
+      "demanda_esperada": 193,
+      "ingreso_proyectado": 27985,
+      "beneficio_neto": 23595
+    },
+    {
+      "origen": 16,
+      "destino": 17,
+      "distancia": 280,
+      "tiempo_vuelo_min": 60,
+      "tiempo_escala_min": 35,
+      "costo_operativo": 3400,
+      "tasa_aeroportuaria": 850,
+      "demanda_esperada": 151,
+      "ingreso_proyectado": 21895,
+      "beneficio_neto": 17645
+    },
+    {
+      "origen": 17,
+      "destino": 18,
+      "distancia": 295,
+      "tiempo_vuelo_min": 60,
+      "tiempo_escala_min": 35,
+      "costo_operativo": 3450,
+      "tasa_aeroportuaria": 850,
+      "demanda_esperada": 148,
+      "ingreso_proyectado": 21460,
+      "beneficio_neto": 17160
+    },
+    {
+      "origen": 18,
+      "destino": 19,
+      "distancia": 395,
+      "tiempo_vuelo_min": 70,
+      "tiempo_escala_min": 40,
+      "costo_operativo": 3900,
+      "tasa_aeroportuaria": 960,
+      "demanda_esperada": 174,
+      "ingreso_proyectado": 25230,
+      "beneficio_neto": 20370
+    },
+    {
+      "origen": 19,
+      "destino": 20,
+      "distancia": 250,
+      "tiempo_vuelo_min": 55,
+      "tiempo_escala_min": 35,
+      "costo_operativo": 3150,
+      "tasa_aeroportuaria": 790,
+      "demanda_esperada": 181,
+      "ingreso_proyectado": 26245,
+      "beneficio_neto": 22305
+    },
+    {
+      "origen": 20,
+      "destino": 4,
+      "distancia": 395,
+      "tiempo_vuelo_min": 70,
+      "tiempo_escala_min": 40,
+      "costo_operativo": 4100,
+      "tasa_aeroportuaria": 990,
+      "demanda_esperada": 171,
+      "ingreso_proyectado": 24795,
+      "beneficio_neto": 19705
+    },
+    {
+      "origen": 11,
+      "destino": 1,
+      "distancia": 860,
+      "tiempo_vuelo_min": 110,
+      "tiempo_escala_min": 50,
+      "costo_operativo": 6700,
+      "tasa_aeroportuaria": 1460,
+      "demanda_esperada": 228,
+      "ingreso_proyectado": 33060,
+      "beneficio_neto": 24900
+    },
+    {
+      "origen": 9,
+      "destino": 7,
+      "distancia": 415,
+      "tiempo_vuelo_min": 75,
+      "tiempo_escala_min": 45,
+      "costo_operativo": 4700,
+      "tasa_aeroportuaria": 1180,
+      "demanda_esperada": 196,
+      "ingreso_proyectado": 28420,
+      "beneficio_neto": 22540
+    }
+  ],
+  "aeronaves": [
+    {
+      "id": 1,
+      "nombre": "Airbus A320neo rentado",
+      "capacidad": 180,
+      "costo_diario": 12000,
+      "autonomia_km": 6300,
+      "restricciones": "Capacidad menor al maximo permitido de 255 pasajeros."
+    },
+    {
+      "id": 2,
+      "nombre": "Boeing 737-800 rentado",
+      "capacidad": 189,
+      "costo_diario": 12800,
+      "autonomia_km": 5600,
+      "restricciones": "Requiere rotaciones de alta ocupacion para maximizar rentabilidad."
+    },
+    {
+      "id": 3,
+      "nombre": "Airbus A321neo rentado",
+      "capacidad": 220,
+      "costo_diario": 15100,
+      "autonomia_km": 7400,
+      "restricciones": "Adecuado para corredores de mayor demanda; no supera 255 pasajeros."
+    }
+  ],
+  "itinerarios": [
+    {
+      "id": 1,
+      "nombre": "Ruta europea destacada",
+      "dias": 15,
+      "fuente": "Eurail European highlights",
+      "aeropuertos": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "descripcion": "Secuencia inspirada en Paris, Amsterdam, Berlin, Praga, Salzburgo, Fussen, Venecia, Florencia, Roma, Montecarlo y Barcelona."
+    },
+    {
+      "id": 2,
+      "nombre": "Tren de las cinco capitales",
+      "dias": 15,
+      "fuente": "Diario de un Mentiroso",
+      "aeropuertos": [
+        1,
+        12,
+        11,
+        13,
+        14,
+        2,
+        3
+      ],
+      "descripcion": "Conecta capitales y grandes nodos turisticos: Paris, Madrid, Barcelona, Londres, Bruselas, Amsterdam y Berlin."
+    },
+    {
+      "id": 3,
+      "nombre": "Diamantes del este de Europa",
+      "dias": 10,
+      "fuente": "Diario de un Mentiroso",
+      "aeropuertos": [
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "descripcion": "Ruta baltica y polaca con Tallin, Riga, Vilna, Varsovia y Cracovia."
+    }
+  ],
+  "vuelos": []
+}
