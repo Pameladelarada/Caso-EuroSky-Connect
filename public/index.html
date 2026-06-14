@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EuroSky Connect | Optimizador de rutas</title>
     <link rel="stylesheet" href="style.css">
-<<<<<<< HEAD
-=======
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCyc6X5XGowkogSPxn8wdv4eiD7jTU3IRw&callback=initMap&libraries=places" async defer></script>
->>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
 </head>
 <body>
     <header class="topbar">
@@ -23,7 +19,6 @@
             <a href="#planificador">Planificador</a>
             <a href="#destinos">Destinos</a>
             <a href="#itinerarios">Itinerarios</a>
-            <a href="#registro">Registro</a>
         </nav>
     </header>
 
@@ -32,7 +27,7 @@
             <div class="hero-copy">
                 <p class="eyebrow">Trabajo final ADA 2026-1</p>
                 <h1>Optimizacion de rutas aereas europeas con grafos y Google Maps</h1>
-                <p>Modelo visual para evaluar aeropuertos, escalas, costos operativos, demanda y rentabilidad dentro de una jornada maxima de 8 horas.</p>
+                <p>Evalua aeropuertos, escalas, costos, rentabilidad, fechas disponibles y rutas segun el algoritmo seleccionado.</p>
             </div>
             <div class="hero-stats" aria-label="Resumen del sistema">
                 <div>
@@ -53,64 +48,55 @@
         <section class="map-layout">
             <aside class="panel planner" id="planificador">
                 <div class="section-title">
-<<<<<<< HEAD
-                    <p>Algoritmos de grafos</p>
-=======
-<<<<<<< HEAD
-                    <p>Algoritmos de grafos</p>
-=======
-                    <p>Algoritmo Dijkstra</p>
->>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
->>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
-                    <h2>Buscar mejor ruta</h2>
+                    <p>Algoritmo seleccionado</p>
+                    <h2>Buscar ruta</h2>
                 </div>
+
                 <form id="routeForm" class="route-form">
                     <label for="inicio">Origen</label>
                     <select id="inicio" required></select>
+
                     <label for="fin">Destino</label>
                     <select id="fin" required></select>
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
+
+                    <label for="fechaVuelo">Fecha del vuelo</label>
+                    <input type="date" id="fechaVuelo" required>
+
                     <label for="algoritmo">Algoritmo</label>
                     <select id="algoritmo" required>
                         <option value="dijkstra" selected>Dijkstra - menor costo</option>
                         <option value="bfs">BFS - menos escalas</option>
-                        <option value="dfs">DFS - exploracion profunda</option>
+                        <option value="dfs">DFS - ruta alternativa profunda</option>
                     </select>
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
->>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
-                    <button type="submit">Calcular ruta optima</button>
+
+                    <button type="submit">Calcular ruta</button>
                 </form>
+
                 <div id="resultadoRuta" class="route-result empty-state">
-                    Selecciona dos aeropuertos para calcular distancia, tiempo, escalas y rentabilidad.
+                    Selecciona origen, destino, fecha y algoritmo para calcular la ruta.
                 </div>
-<<<<<<< HEAD
-                <div id="comparacionAlgoritmos" class="algorithm-comparison"></div>
-=======
-<<<<<<< HEAD
-                <div id="comparacionAlgoritmos" class="algorithm-comparison"></div>
-=======
->>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
->>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
             </aside>
 
             <section class="map-shell" aria-label="Mapa interactivo de rutas">
                 <div id="map"></div>
-                <div id="mensaje" class="map-message">Google Maps activo para visualizar aeropuertos y rutas.</div>
+                <div id="mensaje" class="map-message">Cargando Google Maps...</div>
             </section>
         </section>
 
-        <section class="content-grid" id="destinos">
+        <section class="filter-section" id="destinos">
             <div class="section-title wide">
-                <p>Referencias turisticas</p>
-                <h2>Destinos considerados en Europa</h2>
+                <p>Filtro por ciudad</p>
+                <h2>Referencias turisticas del destino</h2>
             </div>
-            <div id="destinosGrid" class="cards-grid"></div>
+
+            <div class="destination-filter">
+                <label for="destinoFiltro">Ciudad destino</label>
+                <select id="destinoFiltro"></select>
+            </div>
+
+            <div id="destinoDetalle" class="destination-detail empty-state">
+                Selecciona una ciudad para ver su referencia turistica.
+            </div>
         </section>
 
         <section class="content-grid" id="itinerarios">
@@ -119,35 +105,6 @@
                 <h2>Itinerarios sugeridos</h2>
             </div>
             <div id="itinerariosGrid" class="itinerary-grid"></div>
-        </section>
-
-        <section class="register-layout" id="registro">
-            <div class="panel">
-                <div class="section-title">
-                    <p>Persistencia JSON</p>
-                    <h2>Registrar punto operativo</h2>
-                </div>
-                <form id="form" class="route-form">
-                    <label for="nombre">Nombre</label>
-                    <input type="text" id="nombre" placeholder="Ej. Escala tecnica en Lyon" required>
-                    <label for="descripcion">Descripcion</label>
-                    <input type="text" id="descripcion" placeholder="Motivo operativo o turistico" required>
-                    <label for="prioridad">Prioridad</label>
-                    <select id="prioridad">
-                        <option value="Alta">Alta</option>
-                        <option value="Media" selected>Media</option>
-                        <option value="Baja">Baja</option>
-                    </select>
-                    <button type="submit">Guardar en JSON</button>
-                </form>
-            </div>
-            <div class="panel">
-                <div class="section-title">
-                    <p>Puntos agregados</p>
-                    <h2>Vuelos registrados</h2>
-                </div>
-                <ul id="lista" class="saved-list"></ul>
-            </div>
         </section>
     </main>
 
