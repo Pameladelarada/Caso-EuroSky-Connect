@@ -47,7 +47,7 @@ select {
 }
 
 .brand {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 12px;
     color: var(--ink);
@@ -163,8 +163,7 @@ main {
     color: rgba(255, 255, 255, 0.82);
 }
 
-.map-layout,
-.register-layout {
+.map-layout {
     display: grid;
     grid-template-columns: 360px minmax(0, 1fr);
     gap: 22px;
@@ -172,14 +171,16 @@ main {
 }
 
 .panel,
-.map-shell {
+.map-shell,
+.filter-section {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 8px;
     box-shadow: 0 10px 30px rgba(24, 32, 47, 0.08);
 }
 
-.panel {
+.panel,
+.filter-section {
     padding: 22px;
 }
 
@@ -192,19 +193,22 @@ main {
     grid-column: 1 / -1;
 }
 
-.route-form {
+.route-form,
+.destination-filter {
     display: grid;
     gap: 10px;
 }
 
-.route-form label {
+.route-form label,
+.destination-filter label {
     color: var(--muted);
     font-size: 0.82rem;
     font-weight: 750;
 }
 
 .route-form input,
-.route-form select {
+.route-form select,
+.destination-filter select {
     width: 100%;
     min-height: 44px;
     padding: 10px 12px;
@@ -270,8 +274,9 @@ main {
 
 .result-path span,
 .tag {
-    display: inline-flex;
+    display: flex;
     align-items: center;
+    width: fit-content;
     min-height: 30px;
     padding: 5px 9px;
     color: var(--brand-dark);
@@ -303,54 +308,17 @@ main {
 .metric strong {
     display: block;
     margin-top: 4px;
-    font-size: 1.08rem;
+    font-size: 1.02rem;
 }
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
-.algorithm-comparison {
-    display: grid;
-    gap: 10px;
-    margin-top: 16px;
+.filter-section {
+    margin-top: 34px;
 }
 
-.algorithm-comparison h3 {
-    margin: 0;
-    color: var(--ink);
-    font-size: 1rem;
+.destination-detail {
+    margin-top: 18px;
 }
 
-.algorithm-card {
-    display: grid;
-    gap: 4px;
-    padding: 12px;
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-}
-
-.algorithm-card strong {
-    color: var(--brand-dark);
-}
-
-.algorithm-card span {
-    color: var(--ink);
-    font-size: 0.9rem;
-    font-weight: 700;
-}
-
-.algorithm-card small {
-    color: var(--muted);
-    line-height: 1.4;
-}
-
-<<<<<<< HEAD
-=======
-=======
->>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
->>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
 .content-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -372,6 +340,10 @@ main {
     box-shadow: 0 10px 26px rgba(24, 32, 47, 0.07);
 }
 
+.destination-card.featured {
+    box-shadow: none;
+}
+
 .destination-card h3,
 .itinerary-card h3 {
     margin: 0 0 8px;
@@ -379,9 +351,8 @@ main {
 }
 
 .destination-card p,
-.itinerary-card p,
-.saved-list p {
-    margin: 0;
+.itinerary-card p {
+    margin: 0 0 8px;
     color: var(--muted);
     line-height: 1.5;
     font-size: 0.92rem;
@@ -395,40 +366,6 @@ main {
     color: var(--muted);
     font-size: 0.8rem;
     font-weight: 750;
-}
-
-.saved-list {
-    display: grid;
-    gap: 10px;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-}
-
-.saved-list li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px;
-    background: #f8fafc;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-}
-
-.saved-list strong {
-    display: block;
-}
-
-.btn-eliminar {
-    width: 36px;
-    height: 36px;
-    color: #fff;
-    background: var(--danger);
-    border: 0;
-    border-radius: 8px;
-    font-weight: 900;
-    cursor: pointer;
 }
 
 footer {
@@ -451,7 +388,6 @@ footer {
 
     .hero,
     .map-layout,
-    .register-layout,
     .content-grid {
         grid-template-columns: 1fr;
     }

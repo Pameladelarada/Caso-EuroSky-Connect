@@ -1,4 +1,3 @@
-// Algorithms.cpp
 #include "Algoritmos.h"
 #include <iostream>
 #include <queue>

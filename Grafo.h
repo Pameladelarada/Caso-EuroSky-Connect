@@ -1,4 +1,3 @@
-// Graph.h
 #ifndef GRAFO_H
 #define GRAFO_H
 

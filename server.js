@@ -1,6 +1,5 @@
 const fs = require("fs");
 const path = require("path");
-const { execFile } = require("child_process");
 require("dotenv").config();
 
 const express = require("express");
@@ -8,6 +7,7 @@ const express = require("express");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_PATH = path.join(__dirname, "data.json");
+const PEN_RATE = 3.75;
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
@@ -16,35 +16,44 @@ function readData() {
     return JSON.parse(fs.readFileSync(DATA_PATH, "utf8"));
 }
 
-function writeData(data) {
-    fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf8");
-}
-
 function getAirportMap(data) {
     return new Map(data.aeropuertos.map((airport) => [airport.id, airport]));
 }
 
-function routeScore(route) {
-    const weightedCost = route.costo_operativo + route.tasa_aeroportuaria;
-    return Math.max(1, weightedCost);
+function routeScore(route, algorithm) {
+    if (algorithm === "bfs") return 1;
+    if (algorithm === "dfs") return -route.beneficio_neto;
+    return route.costo_operativo + route.tasa_aeroportuaria;
 }
 
-function buildGraph(data) {
+function buildGraph(data, algorithm = "dijkstra") {
     const graph = new Map(data.aeropuertos.map((airport) => [airport.id, []]));
 
     data.rutas.forEach((route) => {
         if (!graph.has(route.origen)) graph.set(route.origen, []);
         graph.get(route.origen).push({
             ...route,
-            peso: routeScore(route)
+            peso: routeScore(route, algorithm)
         });
     });
+
+    if (algorithm === "dfs") {
+        graph.forEach((edges) => {
+            edges.sort((a, b) => b.distancia - a.distancia);
+        });
+    }
+
+    if (algorithm === "dijkstra") {
+        graph.forEach((edges) => {
+            edges.sort((a, b) => a.peso - b.peso);
+        });
+    }
 
     return graph;
 }
 
-function dijkstra(data, startId, endId) {
-    const graph = buildGraph(data);
+function dijkstra(data, startId, endId, flightDate) {
+    const graph = buildGraph(data, "dijkstra");
     const distances = new Map();
     const previous = new Map();
     const visited = new Set();
@@ -73,34 +82,87 @@ function dijkstra(data, startId, endId) {
         });
     }
 
-    return buildRouteFromPrevious(data, startId, endId, previous, "Dijkstra");
+    return buildRouteFromPrevious(data, startId, endId, previous, "Dijkstra", flightDate);
 }
 
-function bfs(data, startId, endId) {
+function bfs(data, startId, endId, flightDate) {
     const graph = buildGraph(data);
-    const queue = [startId];
-    const visited = new Set([startId]);
-    const previous = new Map();
+    const queue = [{
+        id: startId,
+        airportIds: [startId],
+        segments: []
+    }];
+    const bestDepth = new Map();
+    const candidates = [];
+
+    bestDepth.set(startId, 0);
 
     while (queue.length > 0) {
-        const currentId = queue.shift();
-        if (currentId === endId) break;
+        const current = queue.shift();
 
-        const edges = graph.get(currentId) || [];
+        if (current.id === endId) {
+            candidates.push(current);
+            continue;
+        }
+
+        const edges = graph.get(current.id) || [];
+
         edges.forEach((edge) => {
-            if (!visited.has(edge.destino)) {
-                visited.add(edge.destino);
-                previous.set(edge.destino, { id: currentId, edge });
-                queue.push(edge.destino);
-            }
+            if (current.airportIds.includes(edge.destino)) return;
+
+            const nextDepth = current.segments.length + 1;
+            const knownDepth = bestDepth.get(edge.destino);
+
+            if (knownDepth !== undefined && nextDepth > knownDepth) return;
+
+            bestDepth.set(edge.destino, nextDepth);
+
+            queue.push({
+                id: edge.destino,
+                airportIds: [...current.airportIds, edge.destino],
+                segments: [...current.segments, edge]
+            });
         });
     }
 
-    return buildRouteFromPrevious(data, startId, endId, previous, "BFS");
+    if (!candidates.length) return null;
+
+    candidates.sort((a, b) => {
+        const stopsA = Math.max(0, a.airportIds.length - 2);
+        const stopsB = Math.max(0, b.airportIds.length - 2);
+
+        if (stopsA !== stopsB) return stopsA - stopsB;
+
+        const timeA = a.segments.reduce(
+            (sum, route) => sum + route.tiempo_vuelo_min + route.tiempo_escala_min,
+            0
+        );
+        const timeB = b.segments.reduce(
+            (sum, route) => sum + route.tiempo_vuelo_min + route.tiempo_escala_min,
+            0
+        );
+
+        if (timeA !== timeB) return timeA - timeB;
+
+        const distanceA = a.segments.reduce((sum, route) => sum + route.distancia, 0);
+        const distanceB = b.segments.reduce((sum, route) => sum + route.distancia, 0);
+
+        return distanceA - distanceB;
+    });
+
+    const selected = candidates[0];
+
+    return summarizeRoute(
+        data,
+        selected.airportIds,
+        selected.segments,
+        "BFS - menos escalas y menor tiempo",
+        flightDate
+    );
 }
 
-function dfs(data, startId, endId) {
-    const graph = buildGraph(data);
+function dfs(data, startId, endId, flightDate) {
+    const graph = buildGraph(data, "dfs");
     const visited = new Set();
     const previous = new Map();
     let found = false;
@@ -125,13 +187,13 @@ function dfs(data, startId, endId) {
     }
 
     visit(startId);
-    return found ? buildRouteFromPrevious(data, startId, endId, previous, "DFS") : null;
+    return found ? buildRouteFromPrevious(data, startId, endId, previous, "DFS", flightDate) : null;
 }
 
-function buildRouteFromPrevious(data, startId, endId, previous, algoritmo) {
+function buildRouteFromPrevious(data, startId, endId, previous, algorithm, flightDate) {
     if (startId === endId) {
         const airport = getAirportMap(data).get(startId);
-        return summarizeRoute(data, airport ? [startId] : [], [], algoritmo);
+        return summarizeRoute(data, airport ? [startId] : [], [], algorithm, flightDate);
     }
 
     if (!previous.has(endId)) return null;
@@ -149,20 +211,27 @@ function buildRouteFromPrevious(data, startId, endId, previous, algoritmo) {
         airportIds.unshift(currentId);
     }
 
-    return summarizeRoute(data, airportIds, segments, algoritmo);
+    return summarizeRoute(data, airportIds, segments, algorithm, flightDate);
 }
 
-function runAlgorithm(data, algorithm, startId, endId) {
+function runAlgorithm(data, algorithm, startId, endId, flightDate) {
     const normalized = String(algorithm || "dijkstra").toLowerCase();
 
-    if (normalized === "bfs") return bfs(data, startId, endId);
-    if (normalized === "dfs") return dfs(data, startId, endId);
-    return dijkstra(data, startId, endId);
+    if (normalized === "bfs") return bfs(data, startId, endId, flightDate);
+    if (normalized === "dfs") return dfs(data, startId, endId, flightDate);
+    return dijkstra(data, startId, endId, flightDate);
 }
 
-function summarizeRoute(data, airportIds, segments, algoritmo = "Dijkstra") {
+function addMinutesToDate(dateText, minutes) {
+    if (!dateText) return "";
+    const date = new Date(`${dateText}T08:00:00`);
+    date.setMinutes(date.getMinutes() + minutes);
+    return date.toISOString().slice(0, 16).replace("T", " ");
+}
+
+function summarizeRoute(data, airportIds, segments, algorithm = "Dijkstra", flightDate = "") {
     const airports = getAirportMap(data);
-    const secuencia = airportIds.map((id) => airports.get(id)).filter(Boolean);
+    const sequence = airportIds.map((id) => airports.get(id)).filter(Boolean);
     const distancia = segments.reduce((sum, route) => sum + route.distancia, 0);
     const tiempoVuelo = segments.reduce((sum, route) => sum + route.tiempo_vuelo_min, 0);
     const tiempoEscalas = segments.reduce((sum, route) => sum + route.tiempo_escala_min, 0);
@@ -172,26 +241,32 @@ function summarizeRoute(data, airportIds, segments, algoritmo = "Dijkstra") {
     );
     const ingresoTotal = segments.reduce((sum, route) => sum + route.ingreso_proyectado, 0);
     const beneficioNeto = ingresoTotal - costoTotal;
-    const escalas = secuencia.slice(1, -1).map((airport) => ({
+    const tiempoTotal = tiempoVuelo + tiempoEscalas;
+    const escalas = sequence.slice(1, -1).map((airport) => ({
         ciudad: airport.ciudad,
         pais: airport.pais,
         codigo: airport.codigo
     }));
 
     return {
-        algoritmo,
-        secuencia,
+        algoritmo: algorithm,
+        fecha_vuelo: flightDate,
+        fecha_llegada_estimada: addMinutesToDate(flightDate, tiempoTotal),
+        secuencia: sequence,
         segmentos: segments,
         distancia,
         tiempo_vuelo_min: tiempoVuelo,
         tiempo_escala_min: tiempoEscalas,
-        tiempo_total_min: tiempoVuelo + tiempoEscalas,
+        tiempo_total_min: tiempoTotal,
         costo_total: costoTotal,
+        costo_total_pen: costoTotal * PEN_RATE,
         ingreso_total: ingresoTotal,
+        ingreso_total_pen: ingresoTotal * PEN_RATE,
         beneficio_neto: beneficioNeto,
+        beneficio_neto_pen: beneficioNeto * PEN_RATE,
         escalas,
         cantidad_escalas: escalas.length,
-        dentro_jornada: tiempoVuelo + tiempoEscalas <= data.configuracion.jornada_maxima_min
+        dentro_jornada: tiempoTotal <= data.configuracion.jornada_maxima_min
     };
 }
 
@@ -212,10 +287,6 @@ function getSuggestedRoutes(data) {
             resumen: summarizeRoute(data, airportIds, segments, "Sugerida")
         };
     });
-}
-
-function nextId(items) {
-    return items.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
 }
 
 app.get("/api/data", (req, res) => {
@@ -241,89 +312,18 @@ app.get("/ruta", (req, res) => {
     const inicio = Number(req.query.inicio);
     const fin = Number(req.query.fin);
     const algoritmo = req.query.algoritmo || "dijkstra";
+    const fecha = req.query.fecha || "";
 
     if (!inicio || !fin) {
         return res.status(400).json({ error: "Debe enviar inicio y fin." });
     }
 
-    const result = runAlgorithm(data, algoritmo, inicio, fin);
+    const result = runAlgorithm(data, algoritmo, inicio, fin, fecha);
     if (!result) return res.status(404).json({ error: "No existe una ruta conectada." });
 
     res.json(result);
 });
 
-app.get("/api/comparar", (req, res) => {
-    const data = readData();
-    const inicio = Number(req.query.inicio);
-    const fin = Number(req.query.fin);
-
-    if (!inicio || !fin) {
-        return res.status(400).json({ error: "Debe enviar inicio y fin." });
-    }
-
-    const resultados = ["dijkstra", "bfs", "dfs"].map((algoritmo) => ({
-        algoritmo: algoritmo.toUpperCase(),
-        resultado: runAlgorithm(data, algoritmo, inicio, fin)
-    }));
-
-    res.json(resultados);
+app.listen(PORT, () => {
+    console.log(`Servidor en http://localhost:${PORT}`);
 });
-
-app.get("/vuelos", (req, res) => {
-    res.json(readData().vuelos || []);
-});
-
-app.post("/vuelos", (req, res) => {
-    const data = readData();
-    const vuelos = data.vuelos || [];
-    const { nombre, descripcion, lat, lng, prioridad = "Media" } = req.body;
-
-    if (!nombre || !descripcion || Number.isNaN(Number(lat)) || Number.isNaN(Number(lng))) {
-        return res.status(400).json({ error: "Nombre, descripcion, latitud y longitud son obligatorios." });
-    }
-
-    const vuelo = {
-        id: nextId(vuelos),
-        nombre,
-        descripcion,
-        prioridad,
-        lat: Number(lat),
-        lng: Number(lng),
-        creado_en: new Date().toISOString()
-    };
-
-    vuelos.push(vuelo);
-    data.vuelos = vuelos;
-    writeData(data);
-    res.status(201).json(vuelo);
-});
-
-app.put("/vuelos/:id", (req, res) => {
-    const data = readData();
-    const vuelos = data.vuelos || [];
-    const id = Number(req.params.id);
-    const index = vuelos.findIndex((vuelo) => vuelo.id === id);
-
-    if (index === -1) return res.status(404).json({ error: "Vuelo no encontrado." });
-
-    vuelos[index] = { ...vuelos[index], ...req.body, id };
-    data.vuelos = vuelos;
-    writeData(data);
-    res.json(vuelos[index]);
-});
-
-app.delete("/vuelos/:id", (req, res) => {
-    const data = readData();
-    const id = Number(req.params.id);
-    const originalLength = (data.vuelos || []).length;
-
-    data.vuelos = (data.vuelos || []).filter((vuelo) => vuelo.id !== id);
-    writeData(data);
-
-    res.json({
-        mensaje: originalLength === data.vuelos.length ? "No se encontro el vuelo." : "Vuelo eliminado."
-    });
-});
-
-app.get("/dijkstra", (req, res) => {
-    execFile(path.join(__dirname, "dijkstra.exe"), { cwd: __dirname }, (error
