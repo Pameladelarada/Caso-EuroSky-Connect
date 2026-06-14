@@ -151,13 +151,28 @@ document.getElementById("routeForm").addEventListener("submit", async (event) =>
 async function calculateRoute() {
     const inicio = document.getElementById("inicio").value;
     const fin = document.getElementById("fin").value;
+<<<<<<< HEAD
     const algoritmo = document.getElementById("algoritmo").value;
+=======
+<<<<<<< HEAD
+    const algoritmo = document.getElementById("algoritmo").value;
+=======
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
+>>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
     const resultBox = document.getElementById("resultadoRuta");
 
     resultBox.textContent = "Calculando ruta optima...";
 
     try {
+<<<<<<< HEAD
         const response = await fetch(`/ruta?inicio=${inicio}&fin=${fin}&algoritmo=${algoritmo}`);
+=======
+<<<<<<< HEAD
+        const response = await fetch(`/ruta?inicio=${inicio}&fin=${fin}&algoritmo=${algoritmo}`);
+=======
+        const response = await fetch(`/ruta?inicio=${inicio}&fin=${fin}`);
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
+>>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
         const result = await response.json();
 
         if (!response.ok) {
@@ -167,7 +182,14 @@ async function calculateRoute() {
 
         drawRoute(result.secuencia);
         renderRouteResult(result);
+<<<<<<< HEAD
         await renderAlgorithmComparison(inicio, fin);
+=======
+<<<<<<< HEAD
+        await renderAlgorithmComparison(inicio, fin);
+=======
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
+>>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
         requestGoogleDistanceReference(result.secuencia);
     } catch (error) {
         console.error(error);
@@ -184,7 +206,14 @@ function renderRouteResult(result) {
 
     resultBox.classList.remove("empty-state");
     resultBox.innerHTML = `
+<<<<<<< HEAD
         <p class="tag">${result.algoritmo}</p>
+=======
+<<<<<<< HEAD
+        <p class="tag">${result.algoritmo}</p>
+=======
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
+>>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
         <div class="result-path">${path}</div>
         <div class="metric-grid">
             <div class="metric"><span>Distancia</span><strong>${formatNumber.format(result.distancia)} km</strong></div>
@@ -199,6 +228,10 @@ function renderRouteResult(result) {
     `;
 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
 async function renderAlgorithmComparison(inicio, fin) {
     const container = document.getElementById("comparacionAlgoritmos");
     const response = await fetch(`/api/comparar?inicio=${inicio}&fin=${fin}`);
@@ -235,6 +268,11 @@ function renderAlgorithmCard(item) {
     `;
 }
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
+>>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
 function drawRoute(sequence) {
     if (routeLine) routeLine.setMap(null);
 
@@ -379,6 +417,7 @@ function minutesToText(minutes) {
 function setMessage(text) {
     document.getElementById("mensaje").textContent = text;
 }
+<<<<<<< HEAD
 
 async function loadGoogleMapsScript() {
     try {
@@ -402,3 +441,5 @@ async function loadGoogleMapsScript() {
 }
 
 loadGoogleMapsScript();
+=======
+>>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c

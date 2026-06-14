@@ -306,6 +306,10 @@ main {
     font-size: 1.08rem;
 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
 .algorithm-comparison {
     display: grid;
     gap: 10px;
@@ -342,6 +346,11 @@ main {
     line-height: 1.4;
 }
 
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 602cb03e1bf870feaaf09c7f68190256fa41a1ea
+>>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
 .content-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 node_modules/
 .env
 .env.*
@@ -6,3 +7,9 @@ node_modules/
 
 # Ejecutables generados localmente
 *.exe
+=======
+node_modules
+.env
+
+//indicacion para Github para que no suba el API KEY
+>>>>>>> 43ff26426b7ef062d05a8a6588ebaf044254575c
