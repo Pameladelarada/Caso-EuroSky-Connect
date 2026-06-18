@@ -240,6 +240,96 @@ void ejecutarAlgoritmos(const json& data,
     }
 }
 
+void simularRutasPiloto(const json& data, const unordered_map<int, string>& idToNombre) {
+    cout << endl << "--- SIMULACION DE RUTAS PILOTO ---" << endl;
+
+    vector<vector<int>> rutasPiloto = {
+        {1, 12, 13, 14, 2, 3},       // Ruta 1: Tren de las 5 capitales
+        {21, 22, 23, 24, 4, 15},     // Ruta 2: Oh blanca Navidad
+        {10, 25, 7, 26, 27, 28},     // Ruta 3: La super roadtrip mediterranea
+        {29, 30, 31, 2, 32},         // Ruta 4: A la sombra de las capitales
+        {9, 33, 34, 21, 22, 6, 4, 3, 35, 2}, // Ruta 5: La favorita del mentiroso
+        {16, 17, 18, 19, 20}         // Ruta 6: Diamantes del este
+    };
+
+    vector<string> nombresRutas = {
+        "Ruta 1: Tren de las cinco capitales (Paris -> Madrid -> Londres -> Bruselas -> Amsterdam -> Berlin)",
+        "Ruta 2: Oh blanca Navidad (Zurich -> Basilea -> Estrasburgo -> Nuremberg -> Praga -> Viena)",
+        "Ruta 3: La super roadtrip mediterranea (Niza -> Genova -> Venecia -> Liubliana -> Zadar -> Split)",
+        "Ruta 4: A la sombra de las capitales (Rennes -> Ostende -> Amberes -> Amsterdam -> Frankfurt)",
+        "Ruta 5: La favorita del mentiroso (Roma -> Verona -> Innsbruck -> Zurich -> Basilea -> Munich -> Praga -> Berlin -> Eindhoven -> Amsterdam)",
+        "Ruta 6: Diamantes del este de Europa (Tallin -> Riga -> Vilna -> Varsovia -> Cracovia)"
+    };
+
+    int maxMinutosJornada = data["configuracion"]["jornada_maxima_min"].get<int>();
+
+    for (size_t i = 0; i < rutasPiloto.size(); i++) {
+        cout << endl << nombresRutas[i] << endl;
+        
+        // Simular tanto la Ida como el Regreso
+        for (int direccion = 0; direccion < 2; direccion++) {
+            vector<int> rutaActual = rutasPiloto[i];
+            if (direccion == 1) {
+                reverse(rutaActual.begin(), rutaActual.end());
+                cout << "  [Trayecto de Regreso]" << endl;
+            } else {
+                cout << "  [Trayecto de Ida]" << endl;
+            }
+
+            double distanciaTotal = 0;
+            int tiempoVueloMin = 0;
+            int tiempoEscalaMin = 0;
+            double costoOperativoTotal = 0;
+            double ingresosProyectados = 0;
+            double beneficioNetoTotal = 0;
+            bool rutaValida = true;
+
+            for (size_t j = 0; j < rutaActual.size() - 1; j++) {
+                int origen = rutaActual[j];
+                int destino = rutaActual[j+1];
+                bool encontrada = false;
+
+                for (const auto& rutaJSON : data["rutas"]) {
+                    if (rutaJSON["origen"] == origen && rutaJSON["destino"] == destino) {
+                        distanciaTotal += rutaJSON["distancia"].get<double>();
+                        tiempoVueloMin += rutaJSON["tiempo_vuelo_min"].get<int>();
+                        // Only add scale time if it's not the last destination
+                        if (j < rutaActual.size() - 2) {
+                            tiempoEscalaMin += rutaJSON["tiempo_escala_min"].get<int>();
+                        }
+                        costoOperativoTotal += rutaJSON["costo_operativo"].get<double>() + rutaJSON["tasa_aeroportuaria"].get<double>();
+                        ingresosProyectados += rutaJSON["ingreso_proyectado"].get<double>();
+                        beneficioNetoTotal += rutaJSON["beneficio_neto"].get<double>();
+                        encontrada = true;
+                        break;
+                    }
+                }
+
+                if (!encontrada) {
+                    cout << "    [!] No se encontro conexion directa entre " << idToNombre.at(origen) << " y " << idToNombre.at(destino) << " en data.json" << endl;
+                    rutaValida = false;
+                    break;
+                }
+            }
+
+            if (rutaValida) {
+                int tiempoTotalJornada = tiempoVueloMin + tiempoEscalaMin;
+                cout << "    - Distancia Total: " << distanciaTotal << " km" << endl;
+                cout << "    - Tiempo Total Jornada: " << tiempoTotalJornada << " minutos (" << (tiempoTotalJornada / 60.0) << " horas)" << endl;
+                cout << "    - Costo Operativo y Tasas: $" << costoOperativoTotal << endl;
+                cout << "    - Ingresos Proyectados: $" << ingresosProyectados << endl;
+                cout << "    - Beneficio Neto Estimado: $" << beneficioNetoTotal << endl;
+
+                if (tiempoTotalJornada > maxMinutosJornada) {
+                    cout << "    [ADVERTENCIA] La ruta excede la jornada maxima de " << maxMinutosJornada << " minutos." << endl;
+                } else {
+                    cout << "    [OK] La ruta cumple con la jornada maxima operativa." << endl;
+                }
+            }
+        }
+    }
+}
+
 int main() {
     ifstream file("data.json");
     if (!file.is_open()) {
@@ -266,7 +356,8 @@ int main() {
         cout << "5. Mostrar grafo manual" << endl;
         cout << "6. Mostrar aeropuertos de data.json" << endl;
         cout << "7. Ejecutar Dijkstra, BFS y DFS con data.json" << endl;
-        cout << "8. Salir" << endl;
+        cout << "8. Simulacion con rutas piloto" << endl;
+        cout << "9. Salir" << endl;
         cout << "Seleccione una opcion: ";
 
         cin >> opcion;
@@ -295,13 +386,16 @@ int main() {
             ejecutarAlgoritmos(data, grafo, idToNombre);
             break;
         case 8:
+            simularRutasPiloto(data, idToNombre);
+            break;
+        case 9:
             cout << endl << "Programa finalizado." << endl;
             break;
         default:
             cout << endl << "Opcion no valida." << endl;
         }
 
-    } while (opcion != 8);
+    } while (opcion != 9);
 
     return 0;
 }
