@@ -17,15 +17,16 @@
         </a>
         <nav class="nav-links" aria-label="Navegacion principal">
             <a href="#planificador">Planificador</a>
+            <a href="#ranking">Mejores rutas</a>
             <a href="#destinos">Destinos</a>
             <a href="#itinerarios">Itinerarios</a>
+            <a class="admin-link" href="admin-login.html">Admin</a>
         </nav>
     </header>
 
     <main>
         <section class="hero" id="mapa">
             <div class="hero-copy">
-                <p class="eyebrow">Trabajo final ADA 2026-1</p>
                 <h1>Optimizacion de rutas aereas europeas con grafos y Google Maps</h1>
                 <p>Evalua aeropuertos, escalas, costos, rentabilidad, fechas disponibles y rutas segun el algoritmo seleccionado.</p>
             </div>
@@ -39,7 +40,7 @@
                     <small>Rutas</small>
                 </div>
                 <div>
-                    <span>480</span>
+                    <span id="statJourney">0</span>
                     <small>Minutos por jornada</small>
                 </div>
             </div>
@@ -83,6 +84,16 @@
             </section>
         </section>
 
+        <section class="ranking-section hidden" id="ranking">
+            <div class="section-title wide">
+                <p>Consulta de mejores rutas</p>
+                <h2>Ranking de rutas comerciales sugeridas</h2>
+            </div>
+            <div id="rankingGrid" class="ranking-grid empty-state">
+                Busca una ruta para visualizar las tres mejores alternativas por algoritmo.
+            </div>
+        </section>
+
         <section class="filter-section" id="destinos">
             <div class="section-title wide">
                 <p>Filtro por ciudad</p>
@@ -106,6 +117,7 @@
             </div>
             <div id="itinerariosGrid" class="itinerary-grid"></div>
         </section>
+
     </main>
 
     <footer>
