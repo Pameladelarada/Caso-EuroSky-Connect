@@ -359,6 +359,16 @@
       "lat": 51.4501,
       "lng": 5.3745,
       "atractivo": "Cercania a Utrecht y diseno moderno."
+    },
+    {
+      "id": 36,
+      "nombre": "Provenza",
+      "codigo": "MRS",
+      "pais": "Francia",
+      "ciudad": "Marsella",
+      "lat": 5.3,
+      "lng": 43.2,
+      "atractivo": "Notre-Dame de la Garde"
     }
   ],
   "rutas": [

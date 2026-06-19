@@ -17,10 +17,12 @@ const formatPen = new Intl.NumberFormat("es-PE", {
 
 const formatNumber = new Intl.NumberFormat("es-PE");
 
-window.initMap = async function () {
+window.initMap = function () {
     const europeCenter = { lat: 48.7, lng: 9.2 };
+    const mapNode = document.getElementById("map");
+    if (!mapNode || !window.google) return;
 
-    map = new google.maps.Map(document.getElementById("map"), {
+    map = new google.maps.Map(mapNode, {
         zoom: 4,
         center: europeCenter,
         mapTypeControl: false,
@@ -28,61 +30,76 @@ window.initMap = async function () {
         fullscreenControl: true
     });
 
-    await loadInitialData();
+    renderAirportMarkers();
+    setMessage("Google Maps activo para visualizar aeropuertos y rutas.");
 };
 
 async function loadInitialData() {
-    const response = await fetch("/api/data");
-    dataStore = await response.json();
+    try {
+        const response = await fetch("/api/data");
+        dataStore = await response.json();
 
-    renderStats();
-    populateAirportSelects();
-    populateDestinationFilter();
-    renderAirportMarkers();
-    renderItineraries();
-    setDefaultDate();
-    setMessage("Google Maps activo para visualizar aeropuertos y rutas.");
+        renderStats();
+        populateAirportSelects();
+        populateDestinationFilter();
+        await renderItineraries();
+        setDefaultDate();
+        renderAirportMarkers();
+    } catch (error) {
+        console.error(error);
+        setMessage("No se pudieron cargar los datos JSON del proyecto.");
+    }
 }
 
 function setDefaultDate() {
     const input = document.getElementById("fechaVuelo");
+    if (!input) return;
     const today = new Date().toISOString().slice(0, 10);
     input.min = today;
     input.value = today;
 }
 
 function renderStats() {
+    if (!dataStore) return;
     document.getElementById("statAirports").textContent = dataStore.aeropuertos.length;
     document.getElementById("statRoutes").textContent = dataStore.rutas.length;
+    document.getElementById("statJourney").textContent = dataStore.configuracion?.jornada_maxima_min || 480;
 }
 
 function populateAirportSelects() {
     const inicio = document.getElementById("inicio");
     const fin = document.getElementById("fin");
+    if (!inicio || !fin || !dataStore) return;
+
     const options = dataStore.aeropuertos
         .map((airport) => `<option value="${airport.id}">${airport.ciudad} (${airport.codigo})</option>`)
         .join("");
 
     inicio.innerHTML = options;
     fin.innerHTML = options;
-    fin.value = dataStore.aeropuertos[2]?.id || dataStore.aeropuertos[0]?.id;
+    inicio.value = dataStore.aeropuertos[0]?.id || "";
+    fin.value = dataStore.aeropuertos[2]?.id || dataStore.aeropuertos[1]?.id || dataStore.aeropuertos[0]?.id || "";
 }
 
 function populateDestinationFilter() {
     const filtro = document.getElementById("destinoFiltro");
+    if (!filtro || !dataStore) return;
+
     filtro.innerHTML = dataStore.aeropuertos
         .map((airport) => `<option value="${airport.id}">${airport.ciudad} (${airport.codigo})</option>`)
         .join("");
 
-    filtro.addEventListener("change", () => renderDestinationDetail(Number(filtro.value)));
-    renderDestinationDetail(Number(filtro.value));
+    filtro.onchange = () => renderDestinationDetail(Number(filtro.value));
+    renderDestinationDetail(Number(filtro.value || dataStore.aeropuertos[0]?.id));
 }
 
 function renderDestinationDetail(airportId) {
-    const airport = dataStore.aeropuertos.find((item) => item.id === airportId);
+    const airport = dataStore?.aeropuertos.find((item) => item.id === airportId);
     const container = document.getElementById("destinoDetalle");
+    if (!container) return;
 
     if (!airport) {
+        container.classList.add("empty-state");
         container.textContent = "No se encontro informacion para esta ciudad.";
         return;
     }
@@ -96,12 +113,14 @@ function renderDestinationDetail(airportId) {
             </div>
             <h3>${airport.ciudad}</h3>
             <p><strong>Aeropuerto:</strong> ${airport.nombre}</p>
-            <p>${airport.atractivo}</p>
+            <p>${airport.atractivo || "Destino europeo registrado para operaciones y turismo."}</p>
         </article>
     `;
 }
 
 function renderAirportMarkers() {
+    if (!map || !window.google || !dataStore) return;
+
     airportMarkers.forEach((marker) => marker.setMap(null));
     airportMarkers = [];
 
@@ -117,7 +136,7 @@ function renderAirportMarkers() {
         const info = new google.maps.InfoWindow({
             content: `
                 <strong>${airport.ciudad} (${airport.codigo})</strong>
-                <p>${airport.atractivo}</p>
+                <p>${airport.atractivo || "Aeropuerto europeo registrado."}</p>
             `
         });
 
@@ -126,37 +145,39 @@ function renderAirportMarkers() {
         bounds.extend(marker.getPosition());
     });
 
-    map.fitBounds(bounds);
+    if (airportMarkers.length) map.fitBounds(bounds);
 }
 
 async function renderItineraries() {
-    const response = await fetch("/api/rutas-sugeridas");
-    const itineraries = await response.json();
     const grid = document.getElementById("itinerariosGrid");
+    if (!grid) return;
 
-    grid.innerHTML = itineraries
-        .map((itinerary) => {
-            const cities = itinerary.resumen.secuencia.map((airport) => airport.ciudad).join(" -> ");
-            return `
-                <article class="itinerary-card">
-                    <div class="card-meta">
-                        <span>${itinerary.dias} dias</span>
-                        <span>${itinerary.fuente}</span>
-                    </div>
-                    <h3>${itinerary.nombre}</h3>
-                    <p>${itinerary.descripcion}</p>
-                    <p><strong>Secuencia:</strong> ${cities}</p>
-                    <p><strong>Escalas:</strong> ${itinerary.resumen.cantidad_escalas}</p>
-                </article>
-            `;
-        })
-        .join("");
+    try {
+        const response = await fetch("/api/rutas-sugeridas");
+        const itineraries = await response.json();
+
+        grid.innerHTML = itineraries
+            .map((itinerary) => {
+                const cities = itinerary.resumen.secuencia.map((airport) => airport.ciudad).join(" -> ");
+                return `
+                    <article class="itinerary-card">
+                        <div class="card-meta">
+                            <span>${itinerary.dias} dias</span>
+                            <span>${itinerary.fuente}</span>
+                        </div>
+                        <h3>${itinerary.nombre}</h3>
+                        <p>${itinerary.descripcion}</p>
+                        <p><strong>Secuencia:</strong> ${cities}</p>
+                        <p><strong>Escalas:</strong> ${itinerary.resumen.cantidad_escalas}</p>
+                    </article>
+                `;
+            })
+            .join("");
+    } catch (error) {
+        console.error(error);
+        grid.innerHTML = `<p class="empty-state">No se pudieron cargar los itinerarios.</p>`;
+    }
 }
-
-document.getElementById("routeForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    await calculateRoute();
-});
 
 async function calculateRoute() {
     const inicio = document.getElementById("inicio").value;
@@ -179,6 +200,7 @@ async function calculateRoute() {
         drawRoute(result.secuencia);
         renderRouteResult(result);
         renderDestinationDetail(Number(fin));
+        await renderBestRoutes(inicio, fin, fecha, algoritmo);
     } catch (error) {
         console.error(error);
         resultBox.textContent = "Error al buscar la ruta.";
@@ -214,7 +236,69 @@ function renderRouteResult(result) {
     `;
 }
 
+async function renderBestRoutes(inicio, fin, fecha, algoritmo) {
+    const section = document.getElementById("ranking");
+    const container = document.getElementById("rankingGrid");
+    if (!section || !container) return;
+
+    section.classList.remove("hidden");
+    container.classList.add("empty-state");
+    container.textContent = "Calculando ranking de las tres mejores rutas para la busqueda...";
+
+    try {
+        const params = new URLSearchParams({ inicio, fin, fecha, algoritmo });
+        const response = await fetch(`/api/mejores-rutas?${params.toString()}`);
+        const groups = await response.json();
+
+        if (!response.ok) {
+            container.textContent = groups.error || "No se pudo calcular el ranking.";
+            return;
+        }
+
+        container.classList.remove("empty-state");
+        container.innerHTML = groups.map(renderAlgorithmRanking).join("");
+    } catch (error) {
+        console.error(error);
+        container.textContent = "Error al calcular el ranking.";
+    }
+}
+
+function renderAlgorithmRanking(group) {
+    const cards = group.rutas.length
+        ? group.rutas.map((route, index) => renderRankingCard(route, index + 1)).join("")
+        : `<p class="empty-state">No hay rutas factibles dentro de la jornada para este algoritmo.</p>`;
+
+    return `
+        <article class="ranking-column">
+            <h3>${group.nombre}</h3>
+            ${cards}
+        </article>
+    `;
+}
+
+function renderRankingCard(route, position) {
+    const path = route.secuencia.map((airport) => airport.codigo).join(" -> ");
+    const origin = route.secuencia[0]?.ciudad || "-";
+    const destination = route.secuencia[route.secuencia.length - 1]?.ciudad || "-";
+
+    return `
+        <div class="ranking-card">
+            <div class="ranking-position">#${position}</div>
+            <div>
+                <strong>${origin} a ${destination}</strong>
+                <span>${path}</span>
+                <small>${route.cantidad_escalas} escalas | ${minutesToText(route.tiempo_total_min)} | ${formatUsd.format(route.costo_total)} | Beneficio ${formatUsd.format(route.beneficio_neto)}</small>
+            </div>
+        </div>
+    `;
+}
+
 function drawRoute(sequence) {
+    if (!map || !window.google) {
+        setMessage("Ruta calculada. Agrega GOOGLE_MAPS_API_KEY en .env para verla dibujada en el mapa.");
+        return;
+    }
+
     if (routeLine) routeLine.setMap(null);
 
     const path = sequence.map((airport) => ({ lat: airport.lat, lng: airport.lng }));
@@ -241,7 +325,8 @@ function minutesToText(minutes) {
 }
 
 function setMessage(text) {
-    document.getElementById("mensaje").textContent = text;
+    const message = document.getElementById("mensaje");
+    if (message) message.textContent = text;
 }
 
 async function loadGoogleMapsScript() {
@@ -250,7 +335,7 @@ async function loadGoogleMapsScript() {
         const config = await response.json();
 
         if (!config.googleMapsApiKey) {
-            setMessage("No se encontro GOOGLE_MAPS_API_KEY en el archivo .env.");
+            setMessage("No se encontro GOOGLE_MAPS_API_KEY en .env. Los datos y rutas siguen disponibles; el mapa requiere esa clave local.");
             return;
         }
 
@@ -265,4 +350,10 @@ async function loadGoogleMapsScript() {
     }
 }
 
+document.getElementById("routeForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await calculateRoute();
+});
+
+loadInitialData();
 loadGoogleMapsScript();

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | EuroSky Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+    <main class="auth-shell">
+        <section class="auth-card">
+            <a class="brand" href="index.html" aria-label="Volver a EuroSky Connect">
+                <span class="brand-mark">ES</span>
+                <span>
+                    <strong>EuroSky Connect</strong>
+                    <small>Panel de administracion</small>
+                </span>
+            </a>
+
+            <div class="section-title">
+                <p>Acceso privado</p>
+                <h1>Inicio de sesion</h1>
+            </div>
+
+            <form id="loginForm" class="route-form">
+                <label for="adminUser">Usuario</label>
+                <input type="text" id="adminUser" autocomplete="username" placeholder="Ingresa tu usuario" required>
+
+                <label for="adminPassword">Contrasena</label>
+                <input type="password" id="adminPassword" autocomplete="current-password" placeholder="Ingresa tu contrasena" required>
+
+                <button type="submit">Ingresar</button>
+            </form>
+            <p id="loginMessage" class="form-message"></p>
+        </section>
+    </main>
+
+    <script src="admin-login.js"></script>
+</body>
+</html>
