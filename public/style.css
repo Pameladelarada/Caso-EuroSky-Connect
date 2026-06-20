@@ -195,6 +195,7 @@ main {
 .map-shell,
 .filter-section,
 .ranking-section,
+.report-section,
 .admin-section {
     background: var(--surface);
     border: 1px solid var(--line);
@@ -205,6 +206,7 @@ main {
 .panel,
 .filter-section,
 .ranking-section,
+.report-section,
 .admin-section {
     padding: 22px;
 }
@@ -261,6 +263,99 @@ main {
 .route-form button:hover,
 .ranking-toolbar button:hover {
     background: var(--brand-dark);
+}
+
+.report-content {
+    margin-top: 4px;
+}
+
+.report-summary,
+.report-kpis {
+    display: grid;
+    gap: 12px;
+}
+
+.report-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 16px;
+}
+
+.report-summary div,
+.report-kpis div,
+.report-block {
+    padding: 14px;
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.report-summary span,
+.report-kpis span,
+.report-kpis small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.report-summary strong,
+.report-kpis strong {
+    display: block;
+    margin-top: 4px;
+    color: var(--ink);
+}
+
+.report-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: 16px;
+}
+
+.report-kpis strong {
+    font-size: 1.1rem;
+}
+
+.report-block {
+    margin-top: 12px;
+}
+
+.report-block h3 {
+    margin: 0 0 8px;
+    color: var(--brand-dark);
+    font-size: 0.98rem;
+}
+
+.report-block p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.55;
+}
+
+.export-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.export-actions button {
+    min-height: 42px;
+    padding: 0 14px;
+    color: #fff;
+    background: var(--brand);
+    border: 0;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.export-actions button:hover:not(:disabled) {
+    background: var(--brand-dark);
+}
+
+.export-actions button:disabled {
+    color: var(--muted);
+    background: #e5e7eb;
+    cursor: not-allowed;
 }
 
 .map-shell {
@@ -346,6 +441,7 @@ main {
 }
 
 .ranking-section,
+.report-section,
 .admin-section {
     margin-top: 24px;
 }
@@ -613,6 +709,8 @@ footer {
     .map-layout,
     .content-grid,
     .ranking-grid,
+    .report-summary,
+    .report-kpis,
     .admin-panel {
         grid-template-columns: 1fr;
     }

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EuroSky Connect | Optimizador de rutas</title>
     <link rel="stylesheet" href="style.css">
+    <a href="#reporte">Reporte</a>
 </head>
 <body>
     <header class="topbar">
@@ -116,6 +117,21 @@
                 <h2>Itinerarios sugeridos</h2>
             </div>
             <div id="itinerariosGrid" class="itinerary-grid"></div>
+        </section>
+
+        <section class="report-section hidden" id="reporte">
+            <div class="section-title wide">
+                <p>Reporte de resultados</p>
+                <h2>Reporte del recorrido seleccionado</h2>
+            </div>
+            <div id="reportContent" class="report-content empty-state">
+                Calcula una ruta para generar el reporte academico y de toma de decisiones.
+            </div>
+            <div class="export-actions" aria-label="Exportacion de resultados">
+                <button type="button" data-export="txt" disabled>Exportar TXT</button>
+                <button type="button" data-export="csv" disabled>Exportar CSV</button>
+                <button type="button" data-export="json" disabled>Exportar JSON</button>
+            </div>
         </section>
 
     </main>
