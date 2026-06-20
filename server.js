@@ -282,6 +282,22 @@ function buildGraph(data, algorithm = "dijkstra") {
         });
     }
 
+    if (algorithm === "bfs") {
+    graph.forEach((edges) => {
+            edges.sort((a, b) => {
+                if (a.tiempo_vuelo_min !== b.tiempo_vuelo_min) {
+                    return a.tiempo_vuelo_min - b.tiempo_vuelo_min;
+                }
+
+                if (a.distancia !== b.distancia) {
+                    return a.distancia - b.distancia;
+                }
+
+                return routeCost(a) - routeCost(b);
+            });
+        });
+    }
+
     return graph;
 }
 
@@ -319,7 +335,7 @@ function dijkstra(data, startId, endId, flightDate) {
 }
 
 function bfs(data, startId, endId, flightDate) {
-    const graph = buildGraph(data);
+    const graph = buildGraph(data, "bfs");
     const queue = [{
         id: startId,
         airportIds: [startId],
