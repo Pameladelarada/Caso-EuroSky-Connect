@@ -16,6 +16,7 @@ vector<int> reconstruirRuta(const unordered_map<int, int>& anterior, int inicio,
 pair<vector<int>, double> dijkstra(const unordered_map<int, vector<Edge>>& grafo, int inicio, int fin);
 vector<int> bfs(const unordered_map<int, vector<Edge>>& grafo, int inicio, int fin);
 vector<int> dfs(const unordered_map<int, vector<Edge>>& grafo, int inicio, int fin);
+pair<vector<int>, double> rutaOptimaConRestricciones(const unordered_map<int, vector<Edge>>& grafo, int inicio, int fin, int maxMinutosJornada);
 
 // Función para imprimir rutas
 void imprimirRuta(const string& algoritmo, const vector<int>& ruta, const unordered_map<int, string>& idToNombre);

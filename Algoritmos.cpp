@@ -112,6 +112,72 @@ vector<int> dfs(const unordered_map<int, vector<Edge>>& grafo, int inicio, int f
     return reconstruirRuta(anterior, inicio, fin);
 }
 
+void dfsRestriccion(
+    const unordered_map<int, vector<Edge>>& grafo,
+    int actual,
+    int fin,
+    int tiempoActual,
+    int maxTiempo,
+    double costoActual,
+    vector<int>& rutaActual,
+    set<int>& visitados,
+    vector<int>& mejorRuta,
+    double& mejorCosto
+) {
+    if (actual == fin) {
+        if (costoActual < mejorCosto) {
+            mejorCosto = costoActual;
+            mejorRuta = rutaActual;
+        }
+        return;
+    }
+
+    if (!grafo.count(actual)) return;
+
+    for (const Edge& vecino : grafo.at(actual)) {
+        if (!visitados.count(vecino.destino_id)) {
+            int nuevoTiempo = tiempoActual + vecino.tiempo_vuelo_min;
+            if (vecino.destino_id != fin) {
+                nuevoTiempo += vecino.tiempo_escala_min;
+            }
+            
+            if (nuevoTiempo <= maxTiempo) {
+                visitados.insert(vecino.destino_id);
+                rutaActual.push_back(vecino.destino_id);
+
+                dfsRestriccion(grafo, vecino.destino_id, fin, nuevoTiempo, maxTiempo, costoActual + vecino.costo, rutaActual, visitados, mejorRuta, mejorCosto);
+
+                rutaActual.pop_back();
+                visitados.erase(vecino.destino_id);
+            }
+        }
+    }
+}
+
+pair<vector<int>, double> rutaOptimaConRestricciones(
+    const unordered_map<int, vector<Edge>>& grafo, 
+    int inicio, 
+    int fin, 
+    int maxMinutosJornada
+) {
+    vector<int> mejorRuta;
+    double mejorCosto = 1e9;
+    
+    set<int> visitados;
+    vector<int> rutaActual;
+    
+    visitados.insert(inicio);
+    rutaActual.push_back(inicio);
+    
+    dfsRestriccion(grafo, inicio, fin, 0, maxMinutosJornada, 0.0, rutaActual, visitados, mejorRuta, mejorCosto);
+    
+    if (mejorRuta.empty()) {
+        return {{}, 1e9};
+    }
+    
+    return {mejorRuta, mejorCosto};
+}
+
 void imprimirRuta(const string& algoritmo, const vector<int>& ruta, const unordered_map<int, string>& idToNombre) {
     cout << algoritmo << ": ";
 

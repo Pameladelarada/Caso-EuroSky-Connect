@@ -12,6 +12,8 @@ using namespace std;
 struct Edge {
     int destino_id;
     double costo; // Representará el costo total o peso de la ruta
+    int tiempo_vuelo_min;
+    int tiempo_escala_min;
 };
 
 struct Nodo {

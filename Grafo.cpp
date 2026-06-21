@@ -9,11 +9,12 @@ unordered_map<int, vector<Edge>> construirGrafo(const json& data) {
         double costo_operativo = ruta["costo_operativo"].get<double>();
         double tasa_aeroportuaria = ruta["tasa_aeroportuaria"].get<double>();
         
-        // Aquí hacemos el llamado a la función de Costo y Rentabilidad (.h)
         double costo_total = calcularCostoTotal(costo_operativo, tasa_aeroportuaria);
+        int tiempo_vuelo = ruta["tiempo_vuelo_min"].get<int>();
+        int tiempo_escala = ruta["tiempo_escala_min"].get<int>();
         
-        // Agregamos la ruta al grafo, utilizando el costo total como peso
-        grafo[ruta["origen"]].push_back({ruta["destino"], costo_total});
+        // Agregamos la ruta al grafo, utilizando el costo total como peso y agregando los tiempos
+        grafo[ruta["origen"]].push_back({ruta["destino"], costo_total, tiempo_vuelo, tiempo_escala});
     }
     
     return grafo;

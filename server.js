@@ -463,11 +463,57 @@ function buildRouteFromPrevious(data, startId, endId, previous, algorithm, fligh
     return summarizeRoute(data, airportIds, segments, algorithm, flightDate);
 }
 
+function rf14(data, startId, endId, flightDate) {
+    const graph = buildGraph(data, "dijkstra");
+    let bestCost = Infinity;
+    let bestRoute = null;
+    const maxTiempo = data.configuracion?.jornada_maxima_min || 480;
+
+    function dfsRestriccion(currentId, currentCost, currentTime, airportIds, segments, visited) {
+        if (currentId === endId) {
+            if (currentCost < bestCost) {
+                bestCost = currentCost;
+                bestRoute = { airportIds: [...airportIds], segments: [...segments] };
+            }
+            return;
+        }
+
+        const edges = graph.get(currentId) || [];
+        for (const edge of edges) {
+            if (!visited.has(edge.destino)) {
+                let newTime = currentTime + edge.tiempo_vuelo_min;
+                if (edge.destino !== endId) {
+                    newTime += edge.tiempo_escala_min;
+                }
+
+                if (newTime <= maxTiempo) {
+                    visited.add(edge.destino);
+                    airportIds.push(edge.destino);
+                    segments.push(edge);
+
+                    dfsRestriccion(edge.destino, currentCost + edge.peso, newTime, airportIds, segments, visited);
+
+                    segments.pop();
+                    airportIds.pop();
+                    visited.delete(edge.destino);
+                }
+            }
+        }
+    }
+
+    dfsRestriccion(startId, 0, 0, [startId], [], new Set([startId]));
+
+    if (!bestRoute) return null;
+
+    return summarizeRoute(data, bestRoute.airportIds, bestRoute.segments, "RF14 (Jornada Maxima)", flightDate);
+}
+
 function runAlgorithm(data, algorithm, startId, endId, flightDate) {
     const normalized = String(algorithm || "dijkstra").toLowerCase();
 
     if (normalized === "bfs") return bfs(data, startId, endId, flightDate);
     if (normalized === "dfs") return dfs(data, startId, endId, flightDate);
+    if (normalized === "rf14") return rf14(data, startId, endId, flightDate);
     return dijkstra(data, startId, endId, flightDate);
 }
 
@@ -483,6 +529,10 @@ const algorithmRegistry = {
     dfs: {
         label: "DFS - ruta alternativa profunda",
         run: (data, startId, endId, flightDate) => dfs(data, startId, endId, flightDate)
+    },
+    rf14: {
+        label: "RF14 - Ruta optima dentro de jornada",
+        run: (data, startId, endId, flightDate) => rf14(data, startId, endId, flightDate)
     }
 };
 

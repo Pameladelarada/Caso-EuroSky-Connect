@@ -330,6 +330,42 @@ void simularRutasPiloto(const json& data, const unordered_map<int, string>& idTo
     }
 }
 
+void ejecutarRutaOptimaRestricciones(const json& data, const unordered_map<int, vector<Edge>>& grafo, const unordered_map<int, string>& idToNombre) {
+    int inicioId, finId;
+    mostrarAeropuertosJson(data);
+
+    cout << endl << "Ingrese ID de aeropuerto origen: ";
+    cin >> inicioId;
+    cout << "Ingrese ID de aeropuerto destino: ";
+    cin >> finId;
+    limpiarEntrada();
+
+    int maxMinutosJornada = data["configuracion"]["jornada_maxima_min"].get<int>();
+    
+    cout << endl << "Buscando ruta optima considerando limite de " << maxMinutosJornada << " minutos (" << maxMinutosJornada / 60.0 << " horas)..." << endl;
+
+    pair<vector<int>, double> resultado = rutaOptimaConRestricciones(grafo, inicioId, finId, maxMinutosJornada);
+    vector<int> rutaRestringida = resultado.first;
+    double costoTotal = resultado.second;
+
+    cout << endl << "RESULTADO RUTA OPTIMA CON RESTRICCIONES (RF14):" << endl;
+    imprimirRuta("Optima(Tiempo<=Max)", rutaRestringida, idToNombre);
+
+    if (!rutaRestringida.empty()) {
+        auto aeronave = data["aeronaves"][0];
+        double ingresos = aeronave["capacidad"].get<int>() * data["configuracion"]["precio_promedio_boleto"].get<double>();
+        double rentabilidad = calcularBeneficioNeto(ingresos, costoTotal);
+
+        cout << endl;
+        cout << "Aeronave seleccionada: " << aeronave["nombre"] << " (Capacidad: " << aeronave["capacidad"] << ")" << endl;
+        cout << "Costo total operativo: " << costoTotal << endl;
+        cout << "Ingresos estimados: " << ingresos << endl;
+        cout << "Rentabilidad estimada (Beneficio Neto): " << rentabilidad << endl;
+    } else {
+        cout << "No se encontro ninguna ruta factible que cumpla con la restriccion de jornada." << endl;
+    }
+}
+
 int main() {
     ifstream file("data.json");
     if (!file.is_open()) {
@@ -357,7 +393,8 @@ int main() {
         cout << "6. Mostrar aeropuertos de data.json" << endl;
         cout << "7. Ejecutar Dijkstra, BFS y DFS con data.json" << endl;
         cout << "8. Simulacion con rutas piloto" << endl;
-        cout << "9. Salir" << endl;
+        cout << "9. Ejecutar Ruta Optima con Restricciones (RF14)" << endl;
+        cout << "10. Salir" << endl;
         cout << "Seleccione una opcion: ";
 
         cin >> opcion;
@@ -389,13 +426,16 @@ int main() {
             simularRutasPiloto(data, idToNombre);
             break;
         case 9:
+            ejecutarRutaOptimaRestricciones(data, grafo, idToNombre);
+            break;
+        case 10:
             cout << endl << "Programa finalizado." << endl;
             break;
         default:
             cout << endl << "Opcion no valida." << endl;
         }
 
-    } while (opcion != 9);
+    } while (opcion != 10);
 
     return 0;
 }
