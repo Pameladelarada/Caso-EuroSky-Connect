@@ -691,6 +691,58 @@ function getBestCommercialRoutes(data, flightDate = "") {
     });
 }
 
+function compareAlgorithms(data, startId, endId, flightDate = "") {
+
+    const results = [];
+
+    Object.entries(algorithmRegistry).forEach(([key, config]) => {
+
+        const start = performance.now();
+
+        const route = config.run(
+            data,
+            startId,
+            endId,
+            flightDate
+        );
+
+        const end = performance.now();
+
+        if (!route) {
+            results.push({
+                algoritmo_id: key,
+                algoritmo_nombre: config.label,
+                disponible: false
+            });
+
+            return;
+        }
+
+        results.push({
+            algoritmo_id: key,
+            algoritmo_nombre: config.label,
+            disponible: true,
+
+            secuencia: route.secuencia.map(a => a.codigo),
+
+            costo_total: route.costo_total,
+            ingreso_total: route.ingreso_total,
+            beneficio_neto: route.beneficio_neto,
+
+            tiempo_total_min: route.tiempo_total_min,
+            cantidad_escalas: route.cantidad_escalas,
+
+            dentro_jornada: route.dentro_jornada,
+
+            tiempo_ejecucion_ms: Number(
+                (end - start).toFixed(4)
+            )
+        });
+    });
+
+    return results;
+}
+
 app.get("/api/data", (req, res) => {
     res.json(readOperationalData());
 });
@@ -810,21 +862,28 @@ app.get("/api/mejores-rutas", (req, res) => {
     res.json(getBestCommercialRoutes(data, fecha));
 });
 
-app.get("/ruta", (req, res) => {
+app.get("/api/comparacion", (req, res) => {
+
     const data = readOperationalData();
+
     const inicio = Number(req.query.inicio);
     const fin = Number(req.query.fin);
-    const algoritmo = req.query.algoritmo || "dijkstra";
     const fecha = req.query.fecha || "";
 
     if (!inicio || !fin) {
-        return res.status(400).json({ error: "Debe enviar inicio y fin." });
+        return res.status(400).json({
+            error: "Debe enviar inicio y fin."
+        });
     }
 
-    const result = runAlgorithm(data, algoritmo, inicio, fin, fecha);
-    if (!result) return res.status(404).json({ error: "No existe una ruta conectada." });
+    const comparison = compareAlgorithms(
+        data,
+        inicio,
+        fin,
+        fecha
+    );
 
-    res.json(result);
+    res.json(comparison);
 });
 
 app.listen(PORT, () => {
