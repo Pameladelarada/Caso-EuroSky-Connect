@@ -9,8 +9,6 @@ const PORT = process.env.PORT || 3000;
 const DATA_PATH = path.join(__dirname, "data.json");
 const DATA_SOURCES_PATH = path.join(__dirname, "data_sources");
 const PEN_RATE = 3.75;
-const ADMIN_USER = process.env.ADMIN_USER || Buffer.from("YWRtaW4=", "base64").toString("utf8");
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || Buffer.from("YWRtaW4xMjM=", "base64").toString("utf8");
 let cachedDataSources = null;
 
 app.use(express.json());
@@ -18,10 +16,6 @@ app.use(express.static(path.join(__dirname, "public")));
 
 function readData() {
     return JSON.parse(fs.readFileSync(DATA_PATH, "utf8"));
-}
-
-function writeData(data) {
-    fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf8");
 }
 
 function nextId(items) {
@@ -786,78 +780,6 @@ app.get("/api/config", (req, res) => {
 
 app.get("/api/aeropuertos", (req, res) => {
     res.json(readOperationalData().aeropuertos);
-});
-
-app.post("/api/aeropuertos", (req, res) => {
-    const data = readData();
-    const { nombre, codigo, pais, ciudad, lat, lng, atractivo = "" } = req.body;
-
-    if (!nombre || !codigo || !pais || !ciudad || Number.isNaN(Number(lat)) || Number.isNaN(Number(lng))) {
-        return res.status(400).json({ error: "Nombre, codigo IATA, pais, ciudad, latitud y longitud son obligatorios." });
-    }
-
-    const normalizedCode = String(codigo).trim().toUpperCase();
-    const exists = data.aeropuertos.some((airport) => airport.codigo.toUpperCase() === normalizedCode);
-    if (exists) {
-        return res.status(409).json({ error: "Ya existe un aeropuerto con ese codigo IATA." });
-    }
-
-    const airport = {
-        id: nextId(data.aeropuertos),
-        nombre: String(nombre).trim(),
-        codigo: normalizedCode,
-        pais: String(pais).trim(),
-        ciudad: String(ciudad).trim(),
-        lat: Number(lat),
-        lng: Number(lng),
-        atractivo: String(atractivo || `Destino europeo registrado para operaciones de EuroSky Connect.`).trim()
-    };
-
-    data.aeropuertos.push(airport);
-    writeData(data);
-    res.status(201).json(airport);
-});
-
-app.get("/api/aeronaves", (req, res) => {
-    res.json(readData().aeronaves || []);
-});
-
-app.post("/api/aeronaves", (req, res) => {
-    const data = readData();
-    const { nombre, capacidad, costo_diario, autonomia_km, restricciones } = req.body;
-    const maxCapacity = data.configuracion?.capacidad_maxima_pasajeros || 255;
-
-    if (!nombre || Number.isNaN(Number(capacidad)) || Number.isNaN(Number(costo_diario)) || Number.isNaN(Number(autonomia_km)) || !restricciones) {
-        return res.status(400).json({ error: "Nombre, capacidad, costo diario, autonomia y restricciones son obligatorios." });
-    }
-
-    if (Number(capacidad) > maxCapacity) {
-        return res.status(400).json({ error: `La capacidad no puede superar ${maxCapacity} pasajeros.` });
-    }
-
-    const aircraft = {
-        id: nextId(data.aeronaves || []),
-        nombre: String(nombre).trim(),
-        capacidad: Number(capacidad),
-        costo_diario: Number(costo_diario),
-        autonomia_km: Number(autonomia_km),
-        restricciones: String(restricciones).trim()
-    };
-
-    data.aeronaves = data.aeronaves || [];
-    data.aeronaves.push(aircraft);
-    writeData(data);
-    res.status(201).json(aircraft);
-});
-
-app.post("/api/admin/login", (req, res) => {
-    const { usuario, password } = req.body;
-
-    if (usuario === ADMIN_USER && password === ADMIN_PASSWORD) {
-        return res.json({ ok: true, nombre: "Administrador EuroSky" });
-    }
-
-    res.status(401).json({ ok: false, error: "Credenciales invalidas." });
 });
 
 app.get("/api/rutas-sugeridas", (req, res) => {

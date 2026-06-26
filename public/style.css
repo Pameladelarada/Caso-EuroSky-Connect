@@ -95,27 +95,6 @@ select {
     background: #e7f5f2;
 }
 
-.nav-links .admin-link,
-.nav-button {
-    color: #fff;
-    background: var(--brand);
-}
-
-.nav-links .admin-link:hover,
-.nav-button:hover {
-    color: #fff;
-    background: var(--brand-dark);
-}
-
-.nav-button {
-    min-height: 38px;
-    padding: 9px 12px;
-    border: 0;
-    border-radius: 8px;
-    font-weight: 750;
-    cursor: pointer;
-}
-
 main {
     width: min(1180px, calc(100% - 32px));
     margin: 0 auto;
@@ -196,8 +175,7 @@ main {
 .filter-section,
 .ranking-section,
 .comparison-section,
-.report-section,
-.admin-section {
+.report-section {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -208,8 +186,7 @@ main {
 .filter-section,
 .ranking-section,
 .comparison-section,
-.report-section,
-.admin-section {
+.report-section {
     padding: 22px;
 }
 
@@ -444,8 +421,7 @@ main {
 
 .ranking-section,
 .comparison-section,
-.report-section,
-.admin-section {
+.report-section {
     margin-top: 24px;
 }
 
@@ -560,16 +536,11 @@ main {
     padding: 0 18px;
 }
 
-.ranking-grid,
-.admin-panel {
+.ranking-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
     margin-top: 18px;
-}
-
-.admin-panel {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .ranking-column {
@@ -626,90 +597,6 @@ main {
     margin-top: 5px;
     color: var(--muted);
     line-height: 1.4;
-}
-
-.admin-login {
-    max-width: 420px;
-    margin-top: 8px;
-}
-
-.auth-page {
-    min-height: 100vh;
-    background:
-        linear-gradient(90deg, rgba(15, 77, 72, 0.94), rgba(15, 118, 110, 0.76)),
-        url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80") center/cover;
-}
-
-.auth-shell {
-    display: grid;
-    min-height: 100vh;
-    place-items: center;
-    padding: 24px;
-}
-
-.auth-card {
-    width: min(460px, 100%);
-    padding: 28px;
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-}
-
-.auth-card .brand {
-    margin-bottom: 28px;
-}
-
-.auth-card h1,
-.admin-hero h1 {
-    margin: 0 0 16px;
-    font-size: clamp(1.7rem, 3vw, 2.5rem);
-    line-height: 1.08;
-}
-
-.admin-page {
-    width: min(1180px, calc(100% - 32px));
-}
-
-.admin-hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-    gap: 24px;
-    align-items: end;
-    padding: 28px;
-    color: #fff;
-    background:
-        linear-gradient(90deg, rgba(15, 77, 72, 0.95), rgba(15, 118, 110, 0.78)),
-        url("https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1600&q=80") center/cover;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-}
-
-.admin-summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-}
-
-.admin-summary div {
-    padding: 14px;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.26);
-    border-radius: 8px;
-}
-
-.admin-summary strong,
-.admin-summary span {
-    display: block;
-}
-
-.admin-summary strong {
-    font-size: 1.8rem;
-}
-
-.admin-summary span {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.84rem;
 }
 
 .hidden {
@@ -804,23 +691,17 @@ footer {
     }
 
     .hero,
-    .admin-hero,
     .map-layout,
     .content-grid,
     .ranking-grid,
     .comparison-summary-grid,
     .comparison-grid,
     .report-summary,
-    .report-kpis,
-    .admin-panel {
+    .report-kpis {
         grid-template-columns: 1fr;
     }
 
     .ranking-toolbar {
-        grid-template-columns: 1fr;
-    }
-
-    .admin-summary {
         grid-template-columns: 1fr;
     }
 
