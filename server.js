@@ -463,11 +463,112 @@ function buildRouteFromPrevious(data, startId, endId, previous, algorithm, fligh
     return summarizeRoute(data, airportIds, segments, algorithm, flightDate);
 }
 
+function greedy(data, startId, endId, flightDate) {
+    const graph = buildGraph(data, "dijkstra");
+    const distances = new Map();
+    const previous = new Map();
+    const visited = new Set();
+    const queue = [];
+
+    data.aeropuertos.forEach((airport) => distances.set(airport.id, Infinity));
+    distances.set(startId, 0);
+    queue.push({ id: startId, cost: 0 });
+
+    while (queue.length > 0) {
+        queue.sort((a, b) => a.cost - b.cost);
+        const current = queue.shift();
+
+        if (visited.has(current.id)) continue;
+        visited.add(current.id);
+        if (current.id === endId) break;
+
+        const edges = graph.get(current.id) || [];
+        edges.forEach((edge) => {
+            const nextCost = distances.get(current.id) + edge.peso;
+            if (nextCost < distances.get(edge.destino)) {
+                distances.set(edge.destino, nextCost);
+                previous.set(edge.destino, { id: current.id, edge });
+                queue.push({ id: edge.destino, cost: edge.peso });
+            }
+        });
+    }
+
+    return buildRouteFromPrevious(data, startId, endId, previous, "Greedy", flightDate);
+}
+
+function monteCarlo(data, startId, endId, flightDate, iterations = 1000) {
+    const graph = buildGraph(data, "dijkstra");
+    let bestRouteIds = [];
+    let bestSegments = [];
+    let bestCost = Infinity;
+
+    for (let i = 0; i < iterations; i++) {
+        let currentId = startId;
+        let currentCost = 0;
+        const airportIds = [startId];
+        const segments = [];
+        const visited = new Set([startId]);
+
+        while (currentId !== endId) {
+            const edges = graph.get(currentId) || [];
+            const validEdges = edges.filter(e => !visited.has(e.destino));
+
+            if (validEdges.length === 0) break;
+
+            const chosenEdge = validEdges[Math.floor(Math.random() * validEdges.length)];
+            
+            airportIds.push(chosenEdge.destino);
+            segments.push(chosenEdge);
+            visited.add(chosenEdge.destino);
+            currentCost += chosenEdge.peso;
+            currentId = chosenEdge.destino;
+        }
+
+        if (currentId === endId && currentCost < bestCost) {
+            bestCost = currentCost;
+            bestRouteIds = airportIds;
+            bestSegments = segments;
+        }
+    }
+
+    if (bestRouteIds.length === 0) return null;
+    return summarizeRoute(data, bestRouteIds, bestSegments, "Monte Carlo", flightDate);
+}
+
+function bellmanFord(data, startId, endId, flightDate) {
+    const graph = buildGraph(data, "dijkstra");
+    const distances = new Map();
+    const previous = new Map();
+
+    data.aeropuertos.forEach((airport) => distances.set(airport.id, Infinity));
+    distances.set(startId, 0);
+
+    const V = data.aeropuertos.length;
+
+    for (let i = 1; i < V; i++) {
+        graph.forEach((edges, u) => {
+            if (distances.get(u) === Infinity) return;
+            edges.forEach(edge => {
+                const v = edge.destino;
+                if (distances.get(u) + edge.peso < distances.get(v)) {
+                    distances.set(v, distances.get(u) + edge.peso);
+                    previous.set(v, { id: u, edge });
+                }
+            });
+        });
+    }
+
+    return buildRouteFromPrevious(data, startId, endId, previous, "Bellman-Ford", flightDate);
+}
+
 function runAlgorithm(data, algorithm, startId, endId, flightDate) {
     const normalized = String(algorithm || "dijkstra").toLowerCase();
 
     if (normalized === "bfs") return bfs(data, startId, endId, flightDate);
     if (normalized === "dfs") return dfs(data, startId, endId, flightDate);
+    if (normalized === "greedy") return greedy(data, startId, endId, flightDate);
+    if (normalized === "montecarlo") return monteCarlo(data, startId, endId, flightDate);
+    if (normalized === "bellmanford") return bellmanFord(data, startId, endId, flightDate);
     return dijkstra(data, startId, endId, flightDate);
 }
 
@@ -483,6 +584,18 @@ const algorithmRegistry = {
     dfs: {
         label: "DFS - ruta alternativa profunda",
         run: (data, startId, endId, flightDate) => dfs(data, startId, endId, flightDate)
+    },
+    greedy: {
+        label: "Greedy - búsqueda voraz",
+        run: (data, startId, endId, flightDate) => greedy(data, startId, endId, flightDate)
+    },
+    montecarlo: {
+        label: "Monte Carlo - ruta aleatoria",
+        run: (data, startId, endId, flightDate) => monteCarlo(data, startId, endId, flightDate)
+    },
+    bellmanford: {
+        label: "Bellman-Ford - menor costo con iteraciones",
+        run: (data, startId, endId, flightDate) => bellmanFord(data, startId, endId, flightDate)
     }
 };
 

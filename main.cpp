@@ -220,10 +220,22 @@ void ejecutarAlgoritmos(const json& data,
     vector<int> rutaBfs = bfs(grafo, inicioId, finId);
     vector<int> rutaDfs = dfs(grafo, inicioId, finId);
 
+    pair<vector<int>, double> resultadoGreedy = greedy(grafo, inicioId, finId);
+    vector<int> rutaGreedy = resultadoGreedy.first;
+    
+    pair<vector<int>, double> resultadoMonteCarlo = monteCarlo(grafo, inicioId, finId);
+    vector<int> rutaMonteCarlo = resultadoMonteCarlo.first;
+    
+    pair<vector<int>, double> resultadoBellmanFord = bellmanFord(grafo, inicioId, finId);
+    vector<int> rutaBellmanFord = resultadoBellmanFord.first;
+
     cout << endl << "RESULTADOS DE ALGORITMOS:" << endl;
     imprimirRuta("Dijkstra", rutaDijkstra, idToNombre);
     imprimirRuta("BFS", rutaBfs, idToNombre);
     imprimirRuta("DFS", rutaDfs, idToNombre);
+    imprimirRuta("Greedy", rutaGreedy, idToNombre);
+    imprimirRuta("Monte Carlo", rutaMonteCarlo, idToNombre);
+    imprimirRuta("Bellman-Ford", rutaBellmanFord, idToNombre);
 
     if (!rutaDijkstra.empty()) {
         auto aeronave = data["aeronaves"][0];
