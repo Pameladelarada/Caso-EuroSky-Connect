@@ -205,6 +205,7 @@ async function calculateRoute() {
         renderReport(currentRouteReport);
         renderDestinationDetail(Number(fin));
         await renderBestRoutes(inicio, fin, fecha, algoritmo);
+        await renderAlgorithmComparison(inicio, fin, fecha);
     } catch (error) {
         console.error(error);
         resultBox.textContent = "Error al buscar la ruta.";
@@ -543,6 +544,102 @@ function renderRankingCard(route, position) {
                 <small>${route.cantidad_escalas} escalas | ${minutesToText(route.tiempo_total_min)} | ${formatUsd.format(route.costo_total)} | Beneficio ${formatUsd.format(route.beneficio_neto)}</small>
             </div>
         </div>
+    `;
+}
+
+async function renderAlgorithmComparison(inicio, fin, fecha) {
+    const section = document.getElementById("comparacion");
+    const summary = document.getElementById("comparisonSummary");
+    const container = document.getElementById("comparisonGrid");
+    if (!section || !summary || !container) return;
+
+    section.classList.remove("hidden");
+    summary.classList.add("empty-state");
+    summary.textContent = "Comparando algoritmos registrados...";
+    container.classList.add("empty-state");
+    container.textContent = "Calculando costo, tiempo, beneficio, escalas y tiempo de ejecucion.";
+
+    try {
+        const params = new URLSearchParams({ inicio, fin, fecha });
+        const response = await fetch(`/api/comparacion?${params.toString()}`);
+        const results = await response.json();
+
+        if (!response.ok) {
+            summary.textContent = results.error || "No se pudo comparar los algoritmos.";
+            container.textContent = "";
+            return;
+        }
+
+        const available = results.filter((item) => item.disponible);
+        summary.classList.remove("empty-state");
+        summary.innerHTML = renderComparisonSummary(available);
+        container.classList.remove("empty-state");
+        container.innerHTML = results.map(renderComparisonCard).join("");
+    } catch (error) {
+        console.error(error);
+        summary.textContent = "Error al comparar los algoritmos.";
+        container.textContent = "";
+    }
+}
+
+function renderComparisonSummary(results) {
+    if (!results.length) {
+        return `<p class="empty-state">No hay algoritmos con rutas disponibles para este origen y destino.</p>`;
+    }
+
+    const bestCost = results.find((item) => item.destacados?.menor_costo);
+    const bestTime = results.find((item) => item.destacados?.menor_tiempo);
+    const bestProfit = results.find((item) => item.destacados?.mayor_beneficio);
+    const bestStops = results.find((item) => item.destacados?.menos_escalas);
+
+    return `
+        <div class="comparison-summary-grid">
+            <div><span>Menor costo</span><strong>${bestCost?.algoritmo_nombre || "-"}</strong></div>
+            <div><span>Menor tiempo</span><strong>${bestTime?.algoritmo_nombre || "-"}</strong></div>
+            <div><span>Mayor beneficio</span><strong>${bestProfit?.algoritmo_nombre || "-"}</strong></div>
+            <div><span>Menos escalas</span><strong>${bestStops?.algoritmo_nombre || "-"}</strong></div>
+        </div>
+    `;
+}
+
+function renderComparisonCard(result) {
+    if (!result.disponible) {
+        return `
+            <article class="comparison-card unavailable">
+                <h3>${result.algoritmo_nombre}</h3>
+                <p>No se encontro una ruta conectada para este algoritmo.</p>
+            </article>
+        `;
+    }
+
+    const badges = [];
+    if (result.destacados?.menor_costo) badges.push("Menor costo");
+    if (result.destacados?.menor_tiempo) badges.push("Menor tiempo");
+    if (result.destacados?.mayor_beneficio) badges.push("Mayor beneficio");
+    if (result.destacados?.menos_escalas) badges.push("Menos escalas");
+
+    const badgeHtml = badges.length
+        ? `<div class="comparison-badges">${badges.map((badge) => `<span>${badge}</span>`).join("")}</div>`
+        : "";
+    const sequence = result.secuencia.join(" -> ");
+
+    return `
+        <article class="comparison-card">
+            <div class="comparison-card-head">
+                <h3>${result.algoritmo_nombre}</h3>
+                <small>${result.dentro_jornada ? "Factible" : "Excede jornada"}</small>
+            </div>
+            ${badgeHtml}
+            <p class="comparison-path">${sequence}</p>
+            <div class="comparison-metrics">
+                <div><span>Costo</span><strong>${formatUsd.format(result.costo_total)}</strong></div>
+                <div><span>Ingreso</span><strong>${formatUsd.format(result.ingreso_total)}</strong></div>
+                <div><span>Beneficio</span><strong>${formatUsd.format(result.beneficio_neto)}</strong></div>
+                <div><span>Tiempo</span><strong>${minutesToText(result.tiempo_total_min)}</strong></div>
+                <div><span>Escalas</span><strong>${result.cantidad_escalas}</strong></div>
+                <div><span>Ejecucion</span><strong>${result.tiempo_ejecucion_ms} ms</strong></div>
+            </div>
+        </article>
     `;
 }
 

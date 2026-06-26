@@ -195,6 +195,7 @@ main {
 .map-shell,
 .filter-section,
 .ranking-section,
+.comparison-section,
 .report-section,
 .admin-section {
     background: var(--surface);
@@ -206,6 +207,7 @@ main {
 .panel,
 .filter-section,
 .ranking-section,
+.comparison-section,
 .report-section,
 .admin-section {
     padding: 22px;
@@ -441,9 +443,106 @@ main {
 }
 
 .ranking-section,
+.comparison-section,
 .report-section,
 .admin-section {
     margin-top: 24px;
+}
+
+.comparison-summary {
+    margin-top: 4px;
+}
+
+.comparison-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.comparison-summary-grid div,
+.comparison-card {
+    padding: 14px;
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.comparison-summary-grid span,
+.comparison-metrics span,
+.comparison-card small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.comparison-summary-grid strong,
+.comparison-metrics strong {
+    display: block;
+    margin-top: 4px;
+    color: var(--ink);
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 18px;
+}
+
+.comparison-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.comparison-card h3 {
+    margin: 0;
+    color: var(--brand-dark);
+    font-size: 1rem;
+}
+
+.comparison-card.unavailable {
+    color: var(--muted);
+    background: #fff;
+}
+
+.comparison-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.comparison-badges span {
+    padding: 4px 8px;
+    color: var(--brand-dark);
+    background: #e7f5f2;
+    border-radius: 8px;
+    font-size: 0.76rem;
+    font-weight: 800;
+}
+
+.comparison-path {
+    margin: 12px 0;
+    color: var(--ink);
+    font-size: 0.9rem;
+    font-weight: 750;
+    line-height: 1.45;
+}
+
+.comparison-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.comparison-metrics div {
+    padding: 10px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
 }
 
 .ranking-toolbar {
@@ -709,6 +808,8 @@ footer {
     .map-layout,
     .content-grid,
     .ranking-grid,
+    .comparison-summary-grid,
+    .comparison-grid,
     .report-summary,
     .report-kpis,
     .admin-panel {
@@ -744,6 +845,10 @@ footer {
     }
 
     .metric-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .comparison-metrics {
         grid-template-columns: 1fr;
     }
 }

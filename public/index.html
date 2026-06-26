@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EuroSky Connect | Optimizador de rutas</title>
     <link rel="stylesheet" href="style.css">
-    <a href="#reporte">Reporte</a>
 </head>
 <body>
     <header class="topbar">
@@ -19,6 +18,8 @@
         <nav class="nav-links" aria-label="Navegacion principal">
             <a href="#planificador">Planificador</a>
             <a href="#ranking">Mejores rutas</a>
+            <a href="#comparacion">Comparacion</a>
+            <a href="#reporte">Reporte</a>
             <a href="#destinos">Destinos</a>
             <a href="#itinerarios">Itinerarios</a>
             <a class="admin-link" href="admin-login.html">Admin</a>
@@ -92,6 +93,19 @@
             </div>
             <div id="rankingGrid" class="ranking-grid empty-state">
                 Busca una ruta para visualizar las tres mejores alternativas por algoritmo.
+            </div>
+        </section>
+
+        <section class="comparison-section hidden" id="comparacion">
+            <div class="section-title wide">
+                <p>Comparacion de algoritmos</p>
+                <h2>Evaluacion comparativa del recorrido</h2>
+            </div>
+            <div id="comparisonSummary" class="comparison-summary empty-state">
+                Calcula una ruta para comparar automaticamente todos los algoritmos registrados.
+            </div>
+            <div id="comparisonGrid" class="comparison-grid empty-state">
+                La comparacion se actualizara con Dijkstra, BFS, DFS y cualquier algoritmo futuro agregado al registro del backend.
             </div>
         </section>
 

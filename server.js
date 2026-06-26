@@ -692,20 +692,11 @@ function getBestCommercialRoutes(data, flightDate = "") {
 }
 
 function compareAlgorithms(data, startId, endId, flightDate = "") {
-
     const results = [];
 
     Object.entries(algorithmRegistry).forEach(([key, config]) => {
-
         const start = performance.now();
-
-        const route = config.run(
-            data,
-            startId,
-            endId,
-            flightDate
-        );
-
+        const route = config.run(data, startId, endId, flightDate);
         const end = performance.now();
 
         if (!route) {
@@ -722,25 +713,50 @@ function compareAlgorithms(data, startId, endId, flightDate = "") {
             algoritmo_id: key,
             algoritmo_nombre: config.label,
             disponible: true,
-
-            secuencia: route.secuencia.map(a => a.codigo),
-
+            secuencia: route.secuencia.map((airport) => airport.codigo),
+            secuencia_detalle: route.secuencia.map((airport) => ({
+                codigo: airport.codigo,
+                ciudad: airport.ciudad,
+                pais: airport.pais
+            })),
             costo_total: route.costo_total,
             ingreso_total: route.ingreso_total,
             beneficio_neto: route.beneficio_neto,
-
+            distancia_total_km: route.distancia,
             tiempo_total_min: route.tiempo_total_min,
             cantidad_escalas: route.cantidad_escalas,
-
             dentro_jornada: route.dentro_jornada,
-
-            tiempo_ejecucion_ms: Number(
-                (end - start).toFixed(4)
-            )
+            tiempo_ejecucion_ms: Number((end - start).toFixed(4))
         });
     });
 
-    return results;
+    const available = results.filter((result) => result.disponible);
+    const bestCost = available.reduce((best, current) => {
+        if (!best) return current;
+        return current.costo_total < best.costo_total ? current : best;
+    }, null);
+    const bestTime = available.reduce((best, current) => {
+        if (!best) return current;
+        return current.tiempo_total_min < best.tiempo_total_min ? current : best;
+    }, null);
+    const bestProfit = available.reduce((best, current) => {
+        if (!best) return current;
+        return current.beneficio_neto > best.beneficio_neto ? current : best;
+    }, null);
+    const bestStops = available.reduce((best, current) => {
+        if (!best) return current;
+        return current.cantidad_escalas < best.cantidad_escalas ? current : best;
+    }, null);
+
+    return results.map((result) => ({
+        ...result,
+        destacados: {
+            menor_costo: Boolean(bestCost && result.algoritmo_id === bestCost.algoritmo_id),
+            menor_tiempo: Boolean(bestTime && result.algoritmo_id === bestTime.algoritmo_id),
+            mayor_beneficio: Boolean(bestProfit && result.algoritmo_id === bestProfit.algoritmo_id),
+            menos_escalas: Boolean(bestStops && result.algoritmo_id === bestStops.algoritmo_id)
+        }
+    }));
 }
 
 app.get("/api/data", (req, res) => {
@@ -884,6 +900,25 @@ app.get("/api/comparacion", (req, res) => {
     );
 
     res.json(comparison);
+});
+
+app.get("/ruta", (req, res) => {
+    const data = readOperationalData();
+    const inicio = Number(req.query.inicio);
+    const fin = Number(req.query.fin);
+    const algoritmo = req.query.algoritmo || "dijkstra";
+    const fecha = req.query.fecha || "";
+
+    if (!inicio || !fin) {
+        return res.status(400).json({ error: "Debe enviar inicio y fin." });
+    }
+
+    const result = runAlgorithm(data, algoritmo, inicio, fin, fecha);
+    if (!result) {
+        return res.status(404).json({ error: "No existe una ruta conectada." });
+    }
+
+    res.json(result);
 });
 
 app.listen(PORT, () => {
