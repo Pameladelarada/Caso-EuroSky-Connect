@@ -95,27 +95,6 @@ select {
     background: #e7f5f2;
 }
 
-.nav-links .admin-link,
-.nav-button {
-    color: #fff;
-    background: var(--brand);
-}
-
-.nav-links .admin-link:hover,
-.nav-button:hover {
-    color: #fff;
-    background: var(--brand-dark);
-}
-
-.nav-button {
-    min-height: 38px;
-    padding: 9px 12px;
-    border: 0;
-    border-radius: 8px;
-    font-weight: 750;
-    cursor: pointer;
-}
-
 main {
     width: min(1180px, calc(100% - 32px));
     margin: 0 auto;
@@ -195,8 +174,8 @@ main {
 .map-shell,
 .filter-section,
 .ranking-section,
-.report-section,
-.admin-section {
+.comparison-section,
+.report-section {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -206,8 +185,8 @@ main {
 .panel,
 .filter-section,
 .ranking-section,
-.report-section,
-.admin-section {
+.comparison-section,
+.report-section {
     padding: 22px;
 }
 
@@ -441,8 +420,8 @@ main {
 }
 
 .ranking-section,
-.report-section,
-.admin-section {
+.comparison-section,
+.report-section {
     margin-top: 24px;
 }
 
@@ -461,16 +440,11 @@ main {
     padding: 0 18px;
 }
 
-.ranking-grid,
-.admin-panel {
+.ranking-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
     margin-top: 18px;
-}
-
-.admin-panel {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .ranking-column {
@@ -529,88 +503,87 @@ main {
     line-height: 1.4;
 }
 
-.admin-login {
-    max-width: 420px;
-    margin-top: 8px;
+.comparison-summary {
+    margin-top: 4px;
 }
 
-.auth-page {
-    min-height: 100vh;
-    background:
-        linear-gradient(90deg, rgba(15, 77, 72, 0.94), rgba(15, 118, 110, 0.76)),
-        url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80") center/cover;
-}
-
-.auth-shell {
+.comparison-summary-grid {
     display: grid;
-    min-height: 100vh;
-    place-items: center;
-    padding: 24px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
 }
 
-.auth-card {
-    width: min(460px, 100%);
-    padding: 28px;
-    background: #fff;
+.comparison-summary-grid div {
+    padding: 14px;
+    background: #f8fafc;
     border: 1px solid var(--line);
     border-radius: 8px;
-    box-shadow: var(--shadow);
 }
 
-.auth-card .brand {
-    margin-bottom: 28px;
-}
-
-.auth-card h1,
-.admin-hero h1 {
-    margin: 0 0 16px;
-    font-size: clamp(1.7rem, 3vw, 2.5rem);
-    line-height: 1.08;
-}
-
-.admin-page {
-    width: min(1180px, calc(100% - 32px));
-}
-
-.admin-hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-    gap: 24px;
-    align-items: end;
-    padding: 28px;
-    color: #fff;
-    background:
-        linear-gradient(90deg, rgba(15, 77, 72, 0.95), rgba(15, 118, 110, 0.78)),
-        url("https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1600&q=80") center/cover;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-}
-
-.admin-summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-}
-
-.admin-summary div {
-    padding: 14px;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.26);
-    border-radius: 8px;
-}
-
-.admin-summary strong,
-.admin-summary span {
+.comparison-summary-grid span {
     display: block;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.45;
 }
 
-.admin-summary strong {
-    font-size: 1.8rem;
+.comparison-summary-grid strong {
+    display: block;
+    margin-top: 5px;
+    color: var(--ink);
+    font-size: 0.95rem;
 }
 
-.admin-summary span {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 0.84rem;
+.comparison-table-shell {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 18px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.comparison-table {
+    width: 100%;
+    min-width: 980px;
+    border-collapse: collapse;
+    background: #fff;
+}
+
+.comparison-table th,
+.comparison-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.comparison-table th {
+    color: var(--brand-dark);
+    background: #ecfdf5;
+    font-size: 0.78rem;
+    font-weight: 850;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.comparison-table td:nth-child(2) {
+    min-width: 170px;
+    font-weight: 750;
+}
+
+.comparison-table small {
+    display: block;
+    margin-top: 5px;
+    color: var(--accent);
+    font-size: 0.74rem;
+    font-weight: 850;
+}
+
+.comparison-unavailable td {
+    color: var(--muted);
+    background: #f8fafc;
 }
 
 .hidden {
@@ -705,21 +678,16 @@ footer {
     }
 
     .hero,
-    .admin-hero,
     .map-layout,
     .content-grid,
     .ranking-grid,
+    .comparison-summary-grid,
     .report-summary,
-    .report-kpis,
-    .admin-panel {
+    .report-kpis {
         grid-template-columns: 1fr;
     }
 
     .ranking-toolbar {
-        grid-template-columns: 1fr;
-    }
-
-    .admin-summary {
         grid-template-columns: 1fr;
     }
 

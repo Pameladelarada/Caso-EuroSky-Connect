@@ -101,7 +101,7 @@ function renderDestinationDetail(airportId) {
 
     if (!airport) {
         container.classList.add("empty-state");
-        container.textContent = "No se encontro informacion para esta ciudad.";
+        container.textContent = "No se encontró información para esta ciudad.";
         return;
     }
 
@@ -163,7 +163,7 @@ async function renderItineraries() {
                 return `
                     <article class="itinerary-card">
                         <div class="card-meta">
-                            <span>${itinerary.dias} dias</span>
+                            <span>${itinerary.dias} días</span>
                             <span>${itinerary.fuente}</span>
                         </div>
                         <h3>${itinerary.nombre}</h3>
@@ -205,6 +205,7 @@ async function calculateRoute() {
         renderReport(currentRouteReport);
         renderDestinationDetail(Number(fin));
         await renderBestRoutes(inicio, fin, fecha, algoritmo);
+        await renderAlgorithmComparison(inicio, fin, fecha);
     } catch (error) {
         console.error(error);
         resultBox.textContent = "Error al buscar la ruta.";
@@ -446,7 +447,7 @@ function buildTextReport(report) {
         `Fecha de vuelo: ${report.fecha_vuelo}`,
         `Llegada estimada: ${report.fecha_llegada_estimada}`,
         "",
-        "2. Indicadores economicos",
+        "2. Indicadores económicos",
         `Costo total: ${formatUsd.format(report.resumen.costo_total_usd)} / ${formatPen.format(report.resumen.costo_total_pen)}`,
         `Ingreso esperado: ${formatUsd.format(report.resumen.ingreso_esperado_usd)} / ${formatPen.format(report.resumen.ingreso_esperado_pen)}`,
         `Beneficio neto: ${formatUsd.format(report.resumen.beneficio_neto_usd)} / ${formatPen.format(report.resumen.beneficio_neto_pen)}`,
@@ -455,7 +456,7 @@ function buildTextReport(report) {
         `Distancia total: ${formatNumber.format(report.resumen.distancia_total_km)} km`,
         `Tiempo total: ${minutesToText(report.resumen.tiempo_total_min)}`,
         `Escalas: ${report.resumen.cantidad_escalas}`,
-        `Cumple jornada: ${report.resumen.dentro_jornada ? "Si" : "No"}`,
+        `Cumple jornada: ${report.resumen.dentro_jornada ? "Sí" : "No"}`,
         "",
         "4. Secuencia de aeropuertos visitados",
         sequence,
@@ -496,7 +497,7 @@ async function renderBestRoutes(inicio, fin, fecha, algoritmo) {
 
     section.classList.remove("hidden");
     container.classList.add("empty-state");
-    container.textContent = "Calculando ranking de las tres mejores rutas para la busqueda...";
+    container.textContent = "Calculando ranking de las tres mejores rutas para la búsqueda...";
 
     try {
         const params = new URLSearchParams({ inicio, fin, fecha, algoritmo });
@@ -546,6 +547,96 @@ function renderRankingCard(route, position) {
     `;
 }
 
+async function renderAlgorithmComparison(inicio, fin, fecha) {
+    const section = document.getElementById("comparacion");
+    const summary = document.getElementById("comparisonSummary");
+    const body = document.getElementById("comparisonTableBody");
+
+    if (!section || !summary || !body) return;
+
+    section.classList.remove("hidden");
+    summary.classList.add("empty-state");
+    summary.textContent = "Comparando todos los algoritmos registrados...";
+    body.innerHTML = `<tr><td colspan="9">Calculando comparación...</td></tr>`;
+
+    try {
+        const params = new URLSearchParams({ inicio, fin, fecha });
+        const response = await fetch(`/api/comparacion?${params.toString()}`);
+        const results = await response.json();
+
+        if (!response.ok) {
+            summary.textContent = results.error || "No se pudo comparar los algoritmos.";
+            body.innerHTML = `<tr><td colspan="9">No se pudo generar el cuadro comparativo.</td></tr>`;
+            return;
+        }
+
+        const available = results.filter((result) => result.disponible);
+        summary.classList.remove("empty-state");
+        summary.innerHTML = renderComparisonSummary(available);
+        body.innerHTML = results.map(renderComparisonRow).join("");
+    } catch (error) {
+        console.error(error);
+        summary.textContent = "Error al comparar los algoritmos.";
+        body.innerHTML = `<tr><td colspan="9">Error al generar el cuadro comparativo.</td></tr>`;
+    }
+}
+
+function renderComparisonSummary(results) {
+    if (!results.length) {
+        return "No hay rutas disponibles para comparar con este origen y destino.";
+    }
+
+    const bestCost = results.find((item) => item.destacados?.menor_costo);
+    const bestTime = results.find((item) => item.destacados?.menor_tiempo);
+    const bestProfit = results.find((item) => item.destacados?.mayor_beneficio);
+    const bestStops = results.find((item) => item.destacados?.menos_escalas);
+
+    return `
+        <div class="comparison-summary-grid">
+            <div><span>Menor costo</span><strong>${bestCost?.algoritmo_nombre || "-"}</strong></div>
+            <div><span>Menor tiempo</span><strong>${bestTime?.algoritmo_nombre || "-"}</strong></div>
+            <div><span>Mayor beneficio</span><strong>${bestProfit?.algoritmo_nombre || "-"}</strong></div>
+            <div><span>Menos escalas</span><strong>${bestStops?.algoritmo_nombre || "-"}</strong></div>
+        </div>
+    `;
+}
+
+function renderComparisonRow(result) {
+    if (!result.disponible) {
+        return `
+            <tr class="comparison-unavailable">
+                <td>${result.algoritmo_nombre}</td>
+                <td colspan="7">No se encontró una ruta conectada para este algoritmo.</td>
+                <td>${result.tiempo_ejecucion_ms} ms</td>
+            </tr>
+        `;
+    }
+
+    const badges = [];
+    if (result.destacados?.menor_costo) badges.push("menor costo");
+    if (result.destacados?.menor_tiempo) badges.push("menor tiempo");
+    if (result.destacados?.mayor_beneficio) badges.push("mayor beneficio");
+    if (result.destacados?.menos_escalas) badges.push("menos escalas");
+
+    const badgeHtml = badges.length
+        ? `<small>${badges.join(" | ")}</small>`
+        : "";
+
+    return `
+        <tr>
+            <td><strong>${result.algoritmo_nombre}</strong>${badgeHtml}</td>
+            <td>${result.secuencia.join(" -> ")}</td>
+            <td>${formatUsd.format(result.costo_total)}</td>
+            <td>${formatUsd.format(result.ingreso_total)}</td>
+            <td>${formatUsd.format(result.beneficio_neto)}</td>
+            <td>${minutesToText(result.tiempo_total_min)}</td>
+            <td>${result.cantidad_escalas}</td>
+            <td>${result.dentro_jornada ? "Factible" : "Excede"}</td>
+            <td>${result.tiempo_ejecucion_ms} ms</td>
+        </tr>
+    `;
+}
+
 function drawRoute(sequence) {
     if (!map || !window.google) {
         setMessage("Ruta calculada. Agrega GOOGLE_MAPS_API_KEY en .env para verla dibujada en el mapa.");
@@ -588,7 +679,7 @@ async function loadGoogleMapsScript() {
         const config = await response.json();
 
         if (!config.googleMapsApiKey) {
-            setMessage("No se encontro GOOGLE_MAPS_API_KEY en .env. Los datos y rutas siguen disponibles; el mapa requiere esa clave local.");
+            setMessage("No se encontró GOOGLE_MAPS_API_KEY en .env. Los datos y rutas siguen disponibles; el mapa requiere esa clave local.");
             return;
         }
 
@@ -599,7 +690,7 @@ async function loadGoogleMapsScript() {
         document.head.appendChild(script);
     } catch (error) {
         console.error(error);
-        setMessage("No se pudo cargar la configuracion de Google Maps.");
+        setMessage("No se pudo cargar la configuración de Google Maps.");
     }
 }
 

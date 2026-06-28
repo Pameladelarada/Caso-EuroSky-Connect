@@ -9,8 +9,6 @@ const PORT = process.env.PORT || 3000;
 const DATA_PATH = path.join(__dirname, "data.json");
 const DATA_SOURCES_PATH = path.join(__dirname, "data_sources");
 const PEN_RATE = 3.75;
-const ADMIN_USER = process.env.ADMIN_USER || Buffer.from("YWRtaW4=", "base64").toString("utf8");
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || Buffer.from("YWRtaW4xMjM=", "base64").toString("utf8");
 let cachedDataSources = null;
 
 app.use(express.json());
@@ -256,6 +254,9 @@ function routeProfit(route) {
 function routeScore(route, algorithm) {
     if (algorithm === "bfs") return 1;
     if (algorithm === "dfs") return -routeProfit(route);
+    if (algorithm === "bellmanford") {
+        return routeCost(route) + (route.tiempo_vuelo_min + route.tiempo_escala_min) * 18;
+    }
     return routeCost(route);
 }
 
@@ -500,7 +501,7 @@ function monteCarlo(data, startId, endId, flightDate, iterations = 1000) {
     const graph = buildGraph(data, "dijkstra");
     let bestRouteIds = [];
     let bestSegments = [];
-    let bestCost = Infinity;
+    let bestScore = Infinity;
 
     for (let i = 0; i < iterations; i++) {
         let currentId = startId;
@@ -515,7 +516,13 @@ function monteCarlo(data, startId, endId, flightDate, iterations = 1000) {
 
             if (validEdges.length === 0) break;
 
-            const chosenEdge = validEdges[Math.floor(Math.random() * validEdges.length)];
+            const sortedEdges = [...validEdges].sort((a, b) => {
+                const utilityA = routeCost(a) - routeProfit(a) * 0.35 + a.tiempo_vuelo_min * 12;
+                const utilityB = routeCost(b) - routeProfit(b) * 0.35 + b.tiempo_vuelo_min * 12;
+                return utilityA - utilityB;
+            });
+            const candidatePool = sortedEdges.slice(0, Math.min(4, sortedEdges.length));
+            const chosenEdge = candidatePool[Math.floor(Math.random() * candidatePool.length)];
             
             airportIds.push(chosenEdge.destino);
             segments.push(chosenEdge);
@@ -524,10 +531,17 @@ function monteCarlo(data, startId, endId, flightDate, iterations = 1000) {
             currentId = chosenEdge.destino;
         }
 
-        if (currentId === endId && currentCost < bestCost) {
-            bestCost = currentCost;
-            bestRouteIds = airportIds;
-            bestSegments = segments;
+        if (currentId === endId) {
+            const income = segments.reduce((sum, route) => sum + route.ingreso_proyectado, 0);
+            const time = segments.reduce((sum, route) => sum + route.tiempo_vuelo_min + route.tiempo_escala_min, 0);
+            const stops = Math.max(0, airportIds.length - 2);
+            const score = currentCost - income * 0.22 + time * 10 + stops * 650;
+
+            if (score < bestScore) {
+                bestScore = score;
+                bestRouteIds = airportIds;
+                bestSegments = segments;
+            }
         }
     }
 
@@ -536,7 +550,7 @@ function monteCarlo(data, startId, endId, flightDate, iterations = 1000) {
 }
 
 function bellmanFord(data, startId, endId, flightDate) {
-    const graph = buildGraph(data, "dijkstra");
+    const graph = buildGraph(data, "bellmanford");
     const distances = new Map();
     const previous = new Map();
 
@@ -558,7 +572,7 @@ function bellmanFord(data, startId, endId, flightDate) {
         });
     }
 
-    return buildRouteFromPrevious(data, startId, endId, previous, "Bellman-Ford", flightDate);
+    return buildRouteFromPrevious(data, startId, endId, previous, "Bellman-Ford costo-tiempo", flightDate);
 }
 
 function runAlgorithm(data, algorithm, startId, endId, flightDate) {
@@ -804,6 +818,55 @@ function getBestCommercialRoutes(data, flightDate = "") {
     });
 }
 
+function compareAlgorithms(data, startId, endId, flightDate = "") {
+    const results = Object.entries(algorithmRegistry).map(([key, config]) => {
+        const startedAt = Date.now();
+        const result = config.run(data, startId, endId, flightDate);
+        const executionMs = Date.now() - startedAt;
+
+        if (!result) {
+            return {
+                algoritmo_id: key,
+                algoritmo_nombre: config.label,
+                disponible: false,
+                tiempo_ejecucion_ms: executionMs
+            };
+        }
+
+        return {
+            algoritmo_id: key,
+            algoritmo_nombre: config.label,
+            disponible: true,
+            secuencia: result.secuencia.map((airport) => airport.codigo),
+            secuencia_detalle: result.secuencia,
+            costo_total: result.costo_total,
+            ingreso_total: result.ingreso_total,
+            beneficio_neto: result.beneficio_neto,
+            distancia_total_km: result.distancia,
+            tiempo_total_min: result.tiempo_total_min,
+            cantidad_escalas: result.cantidad_escalas,
+            dentro_jornada: result.dentro_jornada,
+            tiempo_ejecucion_ms: executionMs
+        };
+    });
+
+    const available = results.filter((result) => result.disponible);
+    const bestCost = available.reduce((best, current) => !best || current.costo_total < best.costo_total ? current : best, null);
+    const bestTime = available.reduce((best, current) => !best || current.tiempo_total_min < best.tiempo_total_min ? current : best, null);
+    const bestProfit = available.reduce((best, current) => !best || current.beneficio_neto > best.beneficio_neto ? current : best, null);
+    const bestStops = available.reduce((best, current) => !best || current.cantidad_escalas < best.cantidad_escalas ? current : best, null);
+
+    return results.map((result) => ({
+        ...result,
+        destacados: {
+            menor_costo: Boolean(bestCost && result.algoritmo_id === bestCost.algoritmo_id),
+            menor_tiempo: Boolean(bestTime && result.algoritmo_id === bestTime.algoritmo_id),
+            mayor_beneficio: Boolean(bestProfit && result.algoritmo_id === bestProfit.algoritmo_id),
+            menos_escalas: Boolean(bestStops && result.algoritmo_id === bestStops.algoritmo_id)
+        }
+    }));
+}
+
 app.get("/api/data", (req, res) => {
     res.json(readOperationalData());
 });
@@ -838,13 +901,13 @@ app.post("/api/aeropuertos", (req, res) => {
     const { nombre, codigo, pais, ciudad, lat, lng, atractivo = "" } = req.body;
 
     if (!nombre || !codigo || !pais || !ciudad || Number.isNaN(Number(lat)) || Number.isNaN(Number(lng))) {
-        return res.status(400).json({ error: "Nombre, codigo IATA, pais, ciudad, latitud y longitud son obligatorios." });
+        return res.status(400).json({ error: "Nombre, código IATA, país, ciudad, latitud y longitud son obligatorios." });
     }
 
     const normalizedCode = String(codigo).trim().toUpperCase();
     const exists = data.aeropuertos.some((airport) => airport.codigo.toUpperCase() === normalizedCode);
     if (exists) {
-        return res.status(409).json({ error: "Ya existe un aeropuerto con ese codigo IATA." });
+        return res.status(409).json({ error: "Ya existe un aeropuerto con ese código IATA." });
     }
 
     const airport = {
@@ -873,7 +936,7 @@ app.post("/api/aeronaves", (req, res) => {
     const maxCapacity = data.configuracion?.capacidad_maxima_pasajeros || 255;
 
     if (!nombre || Number.isNaN(Number(capacidad)) || Number.isNaN(Number(costo_diario)) || Number.isNaN(Number(autonomia_km)) || !restricciones) {
-        return res.status(400).json({ error: "Nombre, capacidad, costo diario, autonomia y restricciones son obligatorios." });
+        return res.status(400).json({ error: "Nombre, capacidad, costo diario, autonomía y restricciones son obligatorios." });
     }
 
     if (Number(capacidad) > maxCapacity) {
@@ -895,16 +958,6 @@ app.post("/api/aeronaves", (req, res) => {
     res.status(201).json(aircraft);
 });
 
-app.post("/api/admin/login", (req, res) => {
-    const { usuario, password } = req.body;
-
-    if (usuario === ADMIN_USER && password === ADMIN_PASSWORD) {
-        return res.json({ ok: true, nombre: "Administrador EuroSky" });
-    }
-
-    res.status(401).json({ ok: false, error: "Credenciales invalidas." });
-});
-
 app.get("/api/rutas-sugeridas", (req, res) => {
     res.json(getSuggestedRoutes(readOperationalData()));
 });
@@ -921,6 +974,19 @@ app.get("/api/mejores-rutas", (req, res) => {
     }
 
     res.json(getBestCommercialRoutes(data, fecha));
+});
+
+app.get("/api/comparacion", (req, res) => {
+    const data = readOperationalData();
+    const inicio = Number(req.query.inicio);
+    const fin = Number(req.query.fin);
+    const fecha = req.query.fecha || "";
+
+    if (!inicio || !fin) {
+        return res.status(400).json({ error: "Debe enviar inicio y fin." });
+    }
+
+    res.json(compareAlgorithms(data, inicio, fin, fecha));
 });
 
 app.get("/ruta", (req, res) => {

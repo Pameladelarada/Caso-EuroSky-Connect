@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EuroSky Connect | Optimizador de rutas</title>
     <link rel="stylesheet" href="style.css">
-    <a href="#reporte">Reporte</a>
 </head>
 <body>
     <header class="topbar">
@@ -13,23 +12,24 @@
             <span class="brand-mark">ES</span>
             <span>
                 <strong>EuroSky Connect</strong>
-                <small>Planificacion inteligente de rutas</small>
+                <small>Planificación inteligente de rutas</small>
             </span>
         </a>
-        <nav class="nav-links" aria-label="Navegacion principal">
+        <nav class="nav-links" aria-label="Navegación principal">
             <a href="#planificador">Planificador</a>
             <a href="#ranking">Mejores rutas</a>
+            <a href="#comparacion">Comparación</a>
+            <a href="#reporte">Reporte</a>
             <a href="#destinos">Destinos</a>
             <a href="#itinerarios">Itinerarios</a>
-            <a class="admin-link" href="admin-login.html">Admin</a>
         </nav>
     </header>
 
     <main>
         <section class="hero" id="mapa">
             <div class="hero-copy">
-                <h1>Optimizacion de rutas aereas europeas con grafos y Google Maps</h1>
-                <p>Evalua aeropuertos, escalas, costos, rentabilidad, fechas disponibles y rutas segun el algoritmo seleccionado.</p>
+                <h1>Optimización de rutas aéreas europeas con grafos y Google Maps</h1>
+                <p>Evalúa aeropuertos, escalas, costos, rentabilidad, fechas disponibles y rutas según el algoritmo seleccionado.</p>
             </div>
             <div class="hero-stats" aria-label="Resumen del sistema">
                 <div>
@@ -88,7 +88,7 @@
             </section>
         </section>
 
-        <section class="ranking-section hidden" id="ranking">
+        <section class="ranking-section" id="ranking">
             <div class="section-title wide">
                 <p>Consulta de mejores rutas</p>
                 <h2>Ranking de rutas comerciales sugeridas</h2>
@@ -98,10 +98,42 @@
             </div>
         </section>
 
+        <section class="comparison-section" id="comparacion">
+            <div class="section-title wide">
+                <p>Cuadro comparativo</p>
+                <h2>Comparación entre algoritmos</h2>
+            </div>
+            <div id="comparisonSummary" class="comparison-summary empty-state">
+                Calcula una ruta para comparar automáticamente todos los algoritmos disponibles.
+            </div>
+            <div class="comparison-table-shell">
+                <table class="comparison-table" aria-label="Cuadro comparativo de algoritmos">
+                    <thead>
+                        <tr>
+                            <th>Algoritmo</th>
+                            <th>Ruta</th>
+                            <th>Costo</th>
+                            <th>Ingreso</th>
+                            <th>Beneficio</th>
+                            <th>Tiempo</th>
+                            <th>Escalas</th>
+                            <th>Jornada</th>
+                            <th>Ejecución</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonTableBody">
+                        <tr>
+                            <td colspan="9">La tabla se actualizará con Dijkstra, BFS, DFS, Greedy, Monte Carlo, Bellman-Ford y futuros algoritmos del backend.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <section class="filter-section" id="destinos">
             <div class="section-title wide">
                 <p>Filtro por ciudad</p>
-                <h2>Referencias turisticas del destino</h2>
+                <h2>Referencias turísticas del destino</h2>
             </div>
 
             <div class="destination-filter">
@@ -110,7 +142,7 @@
             </div>
 
             <div id="destinoDetalle" class="destination-detail empty-state">
-                Selecciona una ciudad para ver su referencia turistica.
+                Selecciona una ciudad para ver su referencia turística.
             </div>
         </section>
 
@@ -128,9 +160,9 @@
                 <h2>Reporte del recorrido seleccionado</h2>
             </div>
             <div id="reportContent" class="report-content empty-state">
-                Calcula una ruta para generar el reporte academico y de toma de decisiones.
+                Calcula una ruta para generar el reporte académico y de toma de decisiones.
             </div>
-            <div class="export-actions" aria-label="Exportacion de resultados">
+            <div class="export-actions" aria-label="Exportación de resultados">
                 <button type="button" data-export="txt" disabled>Exportar TXT</button>
                 <button type="button" data-export="csv" disabled>Exportar CSV</button>
                 <button type="button" data-export="json" disabled>Exportar JSON</button>
