@@ -17,14 +17,10 @@ pair<vector<int>, double> dijkstra(const unordered_map<int, vector<Edge>>& grafo
 vector<int> bfs(const unordered_map<int, vector<Edge>>& grafo, int inicio, int fin);
 vector<int> dfs(const unordered_map<int, vector<Edge>>& grafo, int inicio, int fin);
 
-// algoritmos Greedy
-pair<vector<int>, double> greedy(const unordered_map<int, vector<Edge>>& grafo, int inicio, int fin);
-
-// algoritmos Monte Carlo
-pair<vector<int>, double> monteCarlo(const unordered_map<int, vector<Edge>>& grafo, int inicio, int fin, int iteraciones = 1000);
-
-// algoritmos Bellman-Ford
-pair<vector<int>, double> bellmanFord(const unordered_map<int, vector<Edge>>& grafo, int inicio, int fin);
+// Nuevos algoritmos
+#include "greedy.h"
+#include "montecarlo.h"
+#include "bellmanford.h"
 
 // Función para imprimir rutas
 void imprimirRuta(const string& algoritmo, const vector<int>& ruta, const unordered_map<int, string>& idToNombre);
