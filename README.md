@@ -2,6 +2,7 @@
 
 Planificador de rutas aéreas europeas que compara **seis algoritmos de grafos** sobre una red real de aeropuertos y evalúa cada ruta por costo, tiempo, escalas y rentabilidad.
 
+[![CI](https://github.com/Pameladelarada/Caso-EuroSky-Connect/actions/workflows/ci.yml/badge.svg)](https://github.com/Pameladelarada/Caso-EuroSky-Connect/actions/workflows/ci.yml)
 ![C++](https://img.shields.io/badge/C%2B%2B-17-00599C)
 ![Node](https://img.shields.io/badge/Node.js-18%2B-339933)
 ![Licencia](https://img.shields.io/badge/licencia-MIT-green)
@@ -122,9 +123,18 @@ En Windows con PowerShell, sin `make`:
 ### 3. Pruebas
 
 ```bash
-npm test      # pruebas de la API
-make test     # pruebas del motor C++
+npm test      # 17 pruebas de la API
+make test     # 30 pruebas del motor C++
 ```
+
+Las dos suites corren automáticamente en cada push y en cada pull request
+([GitHub Actions](.github/workflows/ci.yml)): el motor C++ se compila y se prueba en Linux y macOS,
+y la API se prueba contra Node 18, 20 y 22. El workflow incluye además dos
+pruebas de regresión sobre el binario ya compilado, para las dos fallas de
+entrada que el proyecto tuvo.
+
+No hacen falta dependencias de terceros: las pruebas del motor usan solo la
+biblioteca estándar de C++ y las de la API el runner nativo `node:test`.
 
 ---
 

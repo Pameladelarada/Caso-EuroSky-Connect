@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Si se empuja dos veces seguidas a la misma rama, cancela la corrida vieja.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  motor-cpp:
+    name: Motor C++ (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Versión del compilador
+        run: g++ --version
+
+      - name: Compilar el motor
+        run: make
+
+      - name: Ejecutar las pruebas del motor
+        run: make test
+
+      - name: Regresión CLI-01 — un ID inexistente no debe tumbar el programa
+        run: |
+          printf "7\n999\n999\n9\n" | ./build/eurosky > salida.txt 2>&1
+          grep -q "ID no valido" salida.txt
+          echo "OK: el programa avisa y sigue en vez de lanzar out_of_range"
+
+      # timeout viene de GNU coreutils y no esta en macOS por defecto.
+      - name: Regresión CLI-02 — la entrada cerrada no debe provocar un bucle
+        if: runner.os == 'Linux'
+        run: |
+          printf "abc\n" | timeout 10 ./build/eurosky > bucle.txt 2>&1
+          lineas=$(wc -l < bucle.txt)
+          echo "Líneas generadas: $lineas"
+          test "$lineas" -lt 100
+          echo "OK: el programa termina en vez de reimprimir el menú sin fin"
+
+  api-node:
+    name: API Node (v${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18', '20', '22']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar las pruebas de la API
+        run: npm test
+
+      - name: Comprobar que data.json quedó intacto
+        run: git diff --exit-code data.json
