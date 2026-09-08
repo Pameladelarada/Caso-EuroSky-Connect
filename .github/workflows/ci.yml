@@ -34,7 +34,9 @@ jobs:
       - name: Run the engine tests
         run: make test
 
+      # timeout viene de GNU coreutils y no esta en macOS por defecto.
       - name: Regression - an unknown airport ID must not crash the program
+        if: runner.os == 'Linux'
         run: |
           codigo=0
           printf "7\n999\n999\n9\n" | timeout 10 ./build/eurosky > salida.txt 2>&1 || codigo=$?
