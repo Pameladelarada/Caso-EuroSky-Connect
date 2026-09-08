@@ -10,8 +10,8 @@ Planificador de rutas aéreas europeas que compara **seis algoritmos de grafos**
 ![Licencia](https://img.shields.io/badge/licencia-MIT-green)
 
 <!-- TODO: reemplazar por una captura del mapa con una ruta trazada.
-     Guardar la imagen en docs/captura.png y descomentar la linea de abajo. -->
-<!-- ![Vista del planificador](docs/captura.png) -->
+     Guardar la imagen en docs/screenshot.png y descomentar la linea de abajo. -->
+<!-- ![Vista del planificador](docs/screenshot.png) -->
 
 ---
 
