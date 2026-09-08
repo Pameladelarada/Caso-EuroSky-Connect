@@ -1,10 +1,26 @@
 {
   "name": "eurosky-connect",
   "version": "1.0.0",
+  "description": "Planificador de rutas aéreas europeas que compara seis algoritmos de grafos por costo, tiempo, escalas y rentabilidad.",
   "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
+  "engines": {
+    "node": ">=18"
   },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test \"tests/**/*.test.js\"",
+    "test:watch": "node --test --watch \"tests/**/*.test.js\""
+  },
+  "keywords": [
+    "grafos",
+    "dijkstra",
+    "bellman-ford",
+    "monte-carlo",
+    "optimizacion-de-rutas",
+    "express"
+  ],
+  "license": "MIT",
   "dependencies": {
     "dotenv": "^17.4.2",
     "express": "^5.2.1"
