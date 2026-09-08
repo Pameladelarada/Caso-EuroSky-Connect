@@ -14,7 +14,8 @@ concurrency:
 
 jobs:
   motor-cpp:
-    name: Motor C++ (${{ matrix.os }})
+    timeout-minutes: 15
+    name: Engine (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -24,33 +25,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Versión del compilador
+      - name: Compiler version
         run: g++ --version
 
-      - name: Compilar el motor
+      - name: Build the engine
         run: make
 
-      - name: Ejecutar las pruebas del motor
+      - name: Run the engine tests
         run: make test
 
-      - name: Regresión CLI-01 — un ID inexistente no debe tumbar el programa
+      - name: Regression - an unknown airport ID must not crash the program
         run: |
-          printf "7\n999\n999\n9\n" | ./build/eurosky > salida.txt 2>&1
+          codigo=0
+          printf "7\n999\n999\n9\n" | timeout 10 ./build/eurosky > salida.txt 2>&1 || codigo=$?
+
+          if [ "$codigo" -eq 124 ]; then
+            echo "FAILED: the program hung instead of reporting the bad ID"
+            exit 1
+          fi
+
           grep -q "ID no valido" salida.txt
-          echo "OK: el programa avisa y sigue en vez de lanzar out_of_range"
+          echo "OK: the program reports the bad ID and continues instead of throwing"
 
       # timeout viene de GNU coreutils y no esta en macOS por defecto.
-      - name: Regresión CLI-02 — la entrada cerrada no debe provocar un bucle
+      - name: Regression - closed stdin must not cause an infinite loop
         if: runner.os == 'Linux'
         run: |
-          printf "abc\n" | timeout 10 ./build/eurosky > bucle.txt 2>&1
+          codigo=0
+          printf "abc\n" | timeout 10 ./build/eurosky > bucle.txt 2>&1 || codigo=$?
+
+          if [ "$codigo" -eq 124 ]; then
+            echo "FAILED: the program never terminated"
+            exit 1
+          fi
+
           lineas=$(wc -l < bucle.txt)
-          echo "Líneas generadas: $lineas"
+          echo "Lines produced: $lineas"
           test "$lineas" -lt 100
-          echo "OK: el programa termina en vez de reimprimir el menú sin fin"
+          echo "OK: the program terminates instead of reprinting the menu forever"
 
   api-node:
-    name: API Node (v${{ matrix.node }})
+    timeout-minutes: 15
+    name: API (Node v${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -65,11 +81,11 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
 
-      - name: Instalar dependencias
+      - name: Install dependencies
         run: npm ci
 
-      - name: Ejecutar las pruebas de la API
+      - name: Run the API tests
         run: npm test
 
-      - name: Comprobar que data.json quedó intacto
+      - name: Check data.json was left untouched
         run: git diff --exit-code data.json

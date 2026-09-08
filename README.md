@@ -1,224 +1,239 @@
+[English](README.md) · [Español](README.es.md)
+
 # EuroSky Connect
 
-Planificador de rutas aéreas europeas que compara **seis algoritmos de grafos** sobre una red real de aeropuertos y evalúa cada ruta por costo, tiempo, escalas y rentabilidad.
+A route planner for a European airline that compares **six graph algorithms** over a real network of airports, and scores every route by cost, time, stops and profit.
 
 [![CI](https://github.com/Pameladelarada/Caso-EuroSky-Connect/actions/workflows/ci.yml/badge.svg)](https://github.com/Pameladelarada/Caso-EuroSky-Connect/actions/workflows/ci.yml)
 ![C++](https://img.shields.io/badge/C%2B%2B-17-00599C)
 ![Node](https://img.shields.io/badge/Node.js-18%2B-339933)
-![Licencia](https://img.shields.io/badge/licencia-MIT-green)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-<!-- TODO: reemplazar por una captura del mapa con una ruta trazada.
-     Guardar la imagen en docs/captura.png y descomentar la linea de abajo. -->
-<!-- ![Vista del planificador](docs/captura.png) -->
+<!-- TODO: add a screenshot of the map with a route drawn on it.
+     Save it as docs/screenshot.png and uncomment the line below. -->
+<!-- ![The planner](docs/screenshot.png) -->
 
 ---
 
-## Qué resuelve
+## The problem
 
-Una aerolínea europea necesita decidir **qué rutas operar** y **con qué aeronave**, respetando una jornada máxima de 480 minutos y maximizando el beneficio neto por vuelo.
+An airline has to decide **which routes to operate and with which aircraft**, under a hard constraint: a crew's working day cannot exceed 480 minutes, flight time plus layovers.
 
-El sistema modela la red como un **grafo dirigido y ponderado** donde:
+"Find the shortest path" is not a well-posed question here, because *shortest* is ambiguous. Cheapest in operating cost? Fewest stops? Fastest? Most profitable? Those are four different routes, and one of them may not even be legal to fly within the working-day limit.
 
-- **Nodos** → 36 aeropuertos europeos con coordenadas reales
-- **Aristas** → 534 rutas operables
-- **Peso** → costo total del tramo = `costo_operativo + tasa_aeroportuaria`
+So instead of picking one algorithm, I implemented six and made the system compare them side by side.
 
-Sobre ese grafo corren seis algoritmos y se comparan lado a lado, para mostrar que *"la mejor ruta" depende de qué se optimice*.
+## What I found
 
-| Algoritmo | Qué garantiza | Complejidad |
+Running all six over the same network makes the trade-off concrete:
+
+- **Dijkstra and BFS rarely agree.** The cheapest route usually has more stops than the route with fewest stops, because cheap legs are short and numerous.
+- Under the 480-minute working-day limit, **the cheapest route is sometimes not operable at all** — the layovers push it past the ceiling. The optimum on paper is not the optimum in operations.
+- Greedy and Monte Carlo never beat Dijkstra's cost, which is exactly what theory predicts. Seeing that hold on real data was the point of implementing them.
+
+That is the actual result of the project: not "here is a route finder", but *the criterion you optimise for changes the answer, and the operational constraint can invalidate the mathematical optimum.*
+
+---
+
+## How it works
+
+The network is modelled as a **directed weighted graph**:
+
+- **Nodes** — 36 European airports with real coordinates
+- **Edges** — 534 operable routes
+- **Weight** — leg cost = `operating cost + airport fees`
+
+| Algorithm | What it guarantees | Complexity |
 |---|---|---|
-| **Dijkstra** | Costo mínimo real (pesos no negativos) | `O((V+E) log V)` |
-| **Bellman-Ford** | Costo mínimo + detecta ciclos negativos | `O(V·E)` |
-| **BFS** | Mínimo número de escalas | `O(V+E)` |
-| **DFS** | Cualquier ruta conectada, no óptima | `O(V+E)` |
-| **Greedy** | Heurística: prioriza el mejor tramo inmediato | `O((V+E) log V)` |
-| **Monte Carlo** | Aproximación por muestreo aleatorio | `O(k·V)` |
+| **Dijkstra** | Minimum real cost (non-negative weights) | `O((V+E) log V)` |
+| **Bellman-Ford** | Minimum cost + detects negative cycles | `O(V·E)` |
+| **BFS** | Fewest stops | `O(V+E)` |
+| **DFS** | Any connected route, not optimal | `O(V+E)` |
+| **Greedy** | Heuristic: best immediate leg | `O((V+E) log V)` |
+| **Monte Carlo** | Approximation by random sampling | `O(k·V)` |
 
-**Hallazgo del caso:** Dijkstra y BFS rara vez coinciden. La ruta más barata suele tener más escalas que la ruta con menos escalas, y con el límite de 480 minutos de jornada a veces la más barata ni siquiera es operable.
+All six are implemented from scratch. No graph libraries — understanding the real cost of each data structure was the point.
 
----
-
-## Arquitectura
-
-El proyecto tiene **dos implementaciones deliberadamente paralelas** de los mismos algoritmos:
+### Two engines, one source of truth
 
 ```
 ┌────────────────────────┐      ┌────────────────────────┐
-│   Motor C++ (CLI)      │      │  Servidor Node/Express │
+│   C++ engine (CLI)     │      │  Node/Express server   │
 │                        │      │                        │
-│  Implementación        │      │  Misma lógica en JS +  │
-│  académica de los      │      │  API REST + fechas +   │
-│  algoritmos desde cero │      │  conversión a PEN      │
+│  The algorithms        │      │  Same logic in JS +    │
+│  implemented by hand   │      │  REST API + dates +    │
+│                        │      │  currency conversion   │
 └───────────┬────────────┘      └───────────┬────────────┘
             │                               │
             └───────────┬───────────────────┘
                         ▼
                   ┌──────────┐
-                  │data.json │  ← fuente de verdad compartida
+                  │data.json │  ← shared source of truth
                   └──────────┘
                         ▲
             ┌───────────┴────────────┐
-            │  data_sources/         │
-            │  OurAirports (9 056)   │  ← enriquecimiento
-            │  OpenFlights (67 663)  │
+            │  OurAirports (9,056)   │  ← enrichment
+            │  OpenFlights (67,663)  │
             └────────────────────────┘
 ```
 
-**Por qué dos motores:** el binario C++ es el entregable académico, con los algoritmos implementados a mano y sin librerías de grafos. El servidor Node expone la misma lógica por HTTP para la interfaz web con Google Maps. Ambos leen `data.json`, así que los resultados son comparables.
-
-### Archivos principales
-
-```
-main.cpp                  Menú CLI del motor C++
-Grafo.h / .cpp            Construcción del grafo desde data.json
-Algoritmos.h / .cpp       Dijkstra, BFS, DFS y utilidades compartidas
-greedy.h                  Heurística greedy
-montecarlo.h              Muestreo aleatorio
-bellmanford.h             Bellman-Ford con detección de ciclos negativos
-CostoRentabilidad.h/.cpp  Fórmulas de costo total y beneficio neto
-json.hpp                  nlohmann/json — dependencia de terceros
-
-server.js                 API Express
-public/                   Frontend: HTML, CSS y JS sin framework
-
-data.json                 Aeropuertos, rutas, aeronaves e itinerarios
-data_sources/             CSV y DAT de OurAirports y OpenFlights
-tests/                    Pruebas del motor C++ y de la API
-Makefile                  Compilación y pruebas del motor C++
-```
+The C++ binary is the algorithmic core. The Node server exposes the same logic over HTTP for the Google Maps front end. Both read `data.json`, so their results are directly comparable — which is itself a useful property: it cross-checks two independent implementations of the same six algorithms.
 
 ---
 
-## Cómo ejecutarlo
+## Engineering notes
 
-### Requisitos
+The things worth talking about are not the algorithms — those are textbook. They are what happens at the edges.
+
+### The algorithms were right; the input handling was not
+
+The engine compiles clean under `-Wall -Wextra -Wpedantic` and 26 of 27 algorithm assertions passed on the first run. But the moment the input was not what the code expected, it broke:
+
+- **An airport ID that did not exist terminated the program.** Route printing resolved each node with `unordered_map::at()`, which throws `std::out_of_range` on a missing key. Nothing caught it. Typing `999` at the menu was enough.
+- **A non-numeric menu entry caused an infinite loop.** `cin.clear()` plus `cin.ignore()` recovers from a format error but does not detect end of input. With stdin closed, the read failed on every iteration and the menu reprinted forever — **9,705,078 lines and 228 MB in five seconds**.
+
+The lesson I took from this: the interesting failures were never in the algorithm. They were at the boundary between my code and the outside world.
+
+### Stored XSS in the airport registry
+
+`POST /api/aeropuertos` stored `nombre`, `ciudad` and `atractivo` verbatim in `data.json`, and the front end rendered them with `innerHTML`. Posting `<img src=x onerror=...>` as an airport name persisted executable HTML that then ran for every subsequent visitor.
+
+Fixed in both layers, which is the part I would defend in a review: **validation on the server** (reject `<` and `>`, enforce length) *and* **escaping on the client** (36 interpolations moved to escaped output). Either alone leaves a gap; the server cannot know how every future consumer will render the value, and the client cannot stop bad data from being stored.
+
+### Validation that silently accepted impossible data
+
+The check was `Number.isNaN(Number(lat))`. But `Number(null)` is `0` and `Number("")` is `0` — neither is `NaN`, so both passed, and the airport was saved at coordinates (0, 0), in the Gulf of Guinea, 5,000 km from Europe. The aircraft endpoint never checked sign at all, so a capacity of −500 passengers was accepted.
+
+Now every numeric field goes through a range check: latitude in [−90, 90], longitude in [−180, 180], capacity between 1 and the configured maximum, and IATA codes matched against `^[A-Z]{3}$`.
+
+---
+
+## Running it
+
+### Requirements
 
 - **Node.js 18+**
-- **g++ 9+** o **clang 10+** con soporte C++17
-- Una API key de Google Maps *(opcional: sin ella todo funciona salvo el mapa)*
+- **g++ 9+** or **clang 10+** with C++17 support
+- A Google Maps API key *(optional — everything works without it except the map)*
 
-### 1. Servidor web
+### Web server
 
 ```bash
 npm install
-cp .env.example .env        # y pega tu GOOGLE_MAPS_API_KEY
+cp .env.example .env        # paste your GOOGLE_MAPS_API_KEY
 npm start
 ```
 
-Abre **http://localhost:3000**
+Open **http://localhost:3000**
 
-### 2. Motor C++ (CLI)
-
-```bash
-make          # compila a build/eurosky
-make run      # compila y ejecuta
-```
-
-En Windows con PowerShell, sin `make`:
-
-```powershell
-.\build.ps1
-```
-
-### 3. Pruebas
+### C++ engine
 
 ```bash
-npm test      # 17 pruebas de la API
-make test     # 30 pruebas del motor C++
+make          # builds build/eurosky
+make run      # builds and runs the menu
 ```
 
-Las dos suites corren automáticamente en cada push y en cada pull request
-([GitHub Actions](.github/workflows/ci.yml)): el motor C++ se compila y se prueba en Linux y macOS,
-y la API se prueba contra Node 18, 20 y 22. El workflow incluye además dos
-pruebas de regresión sobre el binario ya compilado, para las dos fallas de
-entrada que el proyecto tuvo.
+### Tests
 
-No hacen falta dependencias de terceros: las pruebas del motor usan solo la
-biblioteca estándar de C++ y las de la API el runner nativo `node:test`.
+```bash
+npm test      # 17 API tests
+make test     # 30 engine tests
+```
 
 ---
 
 ## API
 
-| Método | Endpoint | Descripción |
+| Method | Endpoint | Purpose |
 |---|---|---|
-| `GET` | `/api/resumen` | Conteo de aeropuertos, rutas, aeronaves y fuentes cargadas |
-| `GET` | `/api/aeropuertos` | Lista de aeropuertos con coordenadas |
-| `POST` | `/api/aeropuertos` | Registra un aeropuerto: valida IATA, rango de lat/lng y duplicados |
-| `GET` | `/api/aeronaves` | Flota disponible |
-| `POST` | `/api/aeronaves` | Registra una aeronave: capacidad entre 1 y 255 |
-| `GET` | `/ruta?inicio=1&fin=5&algoritmo=dijkstra` | Ruta óptima con un algoritmo |
-| `GET` | `/api/comparacion?inicio=1&fin=5` | Los seis algoritmos comparados |
-| `GET` | `/api/mejores-rutas` | Ranking comercial de rutas |
-| `GET` | `/api/rutas-sugeridas` | Itinerarios turísticos precargados |
-
-**Ejemplo:**
+| `GET` | `/api/resumen` | Counts of airports, routes, aircraft and loaded sources |
+| `GET` | `/api/aeropuertos` | Airports with coordinates |
+| `POST` | `/api/aeropuertos` | Registers an airport; validates IATA, coordinate ranges and duplicates |
+| `GET` | `/api/aeronaves` | Available fleet |
+| `POST` | `/api/aeronaves` | Registers an aircraft; capacity between 1 and 255 |
+| `GET` | `/ruta?inicio=1&fin=5&algoritmo=dijkstra` | Optimal route under one algorithm |
+| `GET` | `/api/comparacion?inicio=1&fin=5` | All six algorithms compared |
+| `GET` | `/api/mejores-rutas` | Commercial ranking of routes |
 
 ```bash
 curl "http://localhost:3000/api/comparacion?inicio=1&fin=20&fecha=2026-03-15"
 ```
 
-Devuelve un arreglo con los seis algoritmos, cada uno con su secuencia de aeropuertos, costo, tiempo, escalas y beneficio neto, además de un bloque `destacados` que marca cuál gana en cada criterio.
+Returns all six algorithms with their airport sequence, cost, time, stops and net profit, plus a `destacados` block marking which one wins on each criterion.
 
 ---
 
-## Modelo de negocio
+## The business model
 
-**Costo total del tramo**
-
-```
-CT = costo_operativo + tasa_aeroportuaria
-```
-
-**Beneficio neto**
+**Leg cost**
 
 ```
-BN = ingreso_proyectado − CT
+TC = operating_cost + airport_fees
 ```
 
-**Restricción operativa**
+**Net profit**
 
 ```
-tiempo_vuelo + tiempo_escala ≤ 480 min   (jornada máxima)
+NP = projected_revenue − TC
 ```
 
-Los montos se muestran en USD y en PEN.
+**Operational constraint**
+
+```
+flight_time + layover_time ≤ 480 min   (maximum working day)
+```
+
+Amounts are shown in USD and PEN.
 
 ---
 
-## Fuentes de datos
+## Data sources
 
-| Fuente | Registros | Uso |
+| Source | Records | Used for |
 |---|---|---|
-| [OurAirports](https://ourairports.com/data/) | 9 056 aeropuertos | Coordenadas, tipo, país ISO |
-| [OpenFlights](https://openflights.org/data.html) | 67 663 rutas | Conectividad real entre aeropuertos |
-| `data.json` | 36 aeropuertos / 534 rutas | Datos operativos del caso |
+| [OurAirports](https://ourairports.com/data/) | 9,056 airports | Coordinates, type, ISO country |
+| [OpenFlights](https://openflights.org/data.html) | 67,663 routes | Real connectivity between airports |
+| `data.json` | 36 airports / 534 routes | The case's operational data |
 
-Las rutas del caso se enriquecen con conectividad real de OpenFlights: 448 rutas adicionales se derivan de las fuentes externas y 42 rutas del JSON llevan demanda calculada a partir de ellas.
-
----
-
-## Decisiones técnicas
-
-- **Sin librerías de grafos.** Los seis algoritmos están implementados desde cero. Es el punto del ejercicio: entender el costo real de cada estructura de datos.
-- **JSON como almacenamiento.** Suficiente para el volumen del caso. Para producción haría falta una base de datos: el archivo se reescribe completo en cada `POST`.
-- **Frontend sin framework.** HTML, CSS y JS plano, para mantener el foco en los algoritmos y no en el tooling.
-- **Escapado en el cliente y validación en el servidor.** El detalle de destino se renderiza con plantillas, así que los campos de texto que vienen de la API se escapan antes de insertarse en el DOM y se validan al entrar.
-- **`json.hpp` incluido en el repositorio.** Es la librería nlohmann/json en un solo header. Va versionada para que el proyecto compile sin instalar nada.
+The case's routes are enriched with real connectivity: 448 additional routes are derived from the external sources, and 42 routes carry demand computed from them.
 
 ---
 
-## Limitaciones conocidas
+## Testing and CI
 
-- El grafo es **dirigido**: `A → B` no implica `B → A`. Las rutas piloto simulan ida y vuelta consultando ambos sentidos.
-- Monte Carlo es **no determinista**: dos ejecuciones pueden dar rutas distintas.
-- Los aeropuertos que se registran desde el menú del CLI (opciones 1 a 5) viven en una estructura aparte y todavía no se integran al grafo que usan los algoritmos.
-- La demanda esperada es un dato del caso, no una predicción.
+47 tests, no dependencies beyond what the project already uses:
+
+- **30 engine tests** — plain assertions and the C++ standard library, covering all six algorithms plus regression tests for the crash and the infinite loop
+- **17 API tests** — Node's built-in `node:test` runner against the real server, covering the security fixes and validation ranges
+
+CI runs on every push and pull request: the engine builds and its tests run on **Ubuntu and macOS**, the API is tested against **Node 18, 20 and 22**, and two regression steps drive the compiled binary directly for the two input-handling failures above.
 
 ---
 
-## Licencia
+## Design decisions
 
-MIT — ver [LICENSE](LICENSE).
+- **No graph libraries.** All six algorithms are hand-written.
+- **JSON as storage.** Adequate for 36 nodes. Production would need a database: the file is rewritten in full on every `POST`.
+- **No front-end framework.** Plain HTML, CSS and JS, to keep the focus on the algorithms rather than the tooling.
+- **Validate on the server, escape on the client.** Both, not either.
 
-Datos de OurAirports (dominio público) y OpenFlights (ODbL).
+## Known limitations
+
+- The graph is **directed**: `A → B` does not imply `B → A`. Pilot routes simulate the return leg by querying both directions.
+- Monte Carlo is **non-deterministic**: two runs may return different routes.
+- Airports registered from the CLI menu live in a separate structure and are not yet part of the graph the algorithms traverse.
+- Expected demand is a figure from the case, not a prediction.
+
+## What I would do next
+
+- Unify the CLI's manually registered airports with the graph, removing the duplicate data model.
+- Replace the `1e9` sentinel for "no route" with `std::optional<double>`, so callers cannot confuse it with a real, expensive cost.
+- Split `server.js` into routes and services; 1,011 lines in one file is the thing a reviewer comments on first.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+Data from OurAirports (public domain) and OpenFlights (ODbL).
