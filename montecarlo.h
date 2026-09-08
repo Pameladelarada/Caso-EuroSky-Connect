@@ -6,7 +6,7 @@
 #include <vector>
 #include <random>
 #include "Grafo.h"
-#include "Algoritmos.h"
+#include "RutaUtils.h"
 
 using namespace std;
 

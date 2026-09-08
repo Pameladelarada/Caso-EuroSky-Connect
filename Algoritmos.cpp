@@ -1,9 +1,16 @@
 #include "Algoritmos.h"
 #include <iostream>
+#include <string>
 #include <queue>
 #include <set>
 #include <algorithm>
 #include <random>
+
+string nombreDe(const unordered_map<int, string>& idToNombre, int id) {
+    auto it = idToNombre.find(id);
+    if (it != idToNombre.end()) return it->second;
+    return "ID#" + to_string(id) + " (desconocido)";
+}
 
 vector<int> reconstruirRuta(const unordered_map<int, int>& anterior, int inicio, int fin) {
     vector<int> ruta;
@@ -122,7 +129,7 @@ void imprimirRuta(const string& algoritmo, const vector<int>& ruta, const unorde
     }
 
     for (size_t i = 0; i < ruta.size(); i++) {
-        cout << idToNombre.at(ruta[i]);
+        cout << nombreDe(idToNombre, ruta[i]);
         if (i + 1 < ruta.size()) cout << " -> ";
     }
     cout << "\n";

@@ -10,6 +10,9 @@
 #include "Grafo.h"
 #include "CostoRentabilidad.h"
 #include "Algoritmos.h"
+#include "greedy.h"
+#include "montecarlo.h"
+#include "bellmanford.h"
 
 using json = nlohmann::json;
 using namespace std;
@@ -201,17 +204,34 @@ void mostrarAeropuertosJson(const json& data) {
 void ejecutarAlgoritmos(const json& data,
                         const unordered_map<int, vector<Edge>>& grafo,
                         const unordered_map<int, string>& idToNombre) {
-    int inicioId;
-    int finId;
+    int inicioId = 0;
+    int finId = 0;
 
     mostrarAeropuertosJson(data);
 
     cout << endl << "Ingrese ID de aeropuerto origen: ";
-    cin >> inicioId;
+    if (!(cin >> inicioId)) {
+        limpiarEntrada();
+        cout << "Entrada no valida. Debe ser un numero." << endl;
+        return;
+    }
 
     cout << "Ingrese ID de aeropuerto destino: ";
-    cin >> finId;
+    if (!(cin >> finId)) {
+        limpiarEntrada();
+        cout << "Entrada no valida. Debe ser un numero." << endl;
+        return;
+    }
     limpiarEntrada();
+
+    // Sin esta comprobacion, un ID inexistente llegaba hasta imprimirRuta
+    // y terminaba el programa con std::out_of_range.
+    if (!idToNombre.count(inicioId) || !idToNombre.count(finId)) {
+        cout << endl
+             << "ID no valido. Elige un numero de la lista de aeropuertos."
+             << endl;
+        return;
+    }
 
     pair<vector<int>, double> resultadoDijkstra = dijkstra(grafo, inicioId, finId);
     vector<int> rutaDijkstra = resultadoDijkstra.first;
@@ -318,7 +338,9 @@ void simularRutasPiloto(const json& data, const unordered_map<int, string>& idTo
                 }
 
                 if (!encontrada) {
-                    cout << "    [!] No se encontro conexion directa entre " << idToNombre.at(origen) << " y " << idToNombre.at(destino) << " en data.json" << endl;
+                    cout << "    [!] No se encontro conexion directa entre "
+                         << nombreDe(idToNombre, origen) << " y "
+                         << nombreDe(idToNombre, destino) << " en data.json" << endl;
                     rutaValida = false;
                     break;
                 }
@@ -356,7 +378,7 @@ int main() {
     unordered_map<int, string> idToNombre = obtenerMapeoNombres(data);
     unordered_map<int, vector<Edge>> grafo = construirGrafo(data);
 
-    int opcion;
+    int opcion = 0;
 
     do {
         cout << endl;
@@ -372,7 +394,17 @@ int main() {
         cout << "9. Salir" << endl;
         cout << "Seleccione una opcion: ";
 
-        cin >> opcion;
+        if (!(cin >> opcion)) {
+            // Sin esta rama, al cerrarse la entrada (Ctrl+D o una tuberia)
+            // cin fallaba en cada vuelta y el menu se reimprimia sin fin.
+            if (cin.eof()) {
+                cout << endl << "Entrada cerrada. Programa finalizado." << endl;
+                break;
+            }
+            limpiarEntrada();
+            cout << endl << "Escribe un numero del 1 al 9." << endl;
+            continue;
+        }
         limpiarEntrada();
 
         switch (opcion) {
