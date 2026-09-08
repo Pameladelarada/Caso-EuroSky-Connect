@@ -26,6 +26,30 @@ function nextId(items) {
     return items.reduce((max, item) => Math.max(max, Number(item.id) || 0), 0) + 1;
 }
 
+// Devuelve el numero si es finito y esta dentro del rango, o null si no.
+// Number(null) y Number("") valen 0, no NaN, asi que comprobar solo
+// Number.isNaN dejaba pasar campos vacios como si fueran coordenada 0.
+function numeroEnRango(valor, minimo, maximo) {
+    if (valor === null || valor === undefined || valor === "") return null;
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return null;
+    return numero >= minimo && numero <= maximo ? numero : null;
+}
+
+// Texto limpio para campos que solo deberian llevar nombres.
+// Rechaza < y > porque estos valores se renderizan en el frontend.
+function textoSeguro(valor, maximo = 120) {
+    if (typeof valor !== "string") return null;
+    const limpio = valor.trim();
+    if (!limpio || limpio.length > maximo) return null;
+    if (/[<>]/.test(limpio)) return null;
+    return limpio;
+}
+
+const ALGORITMOS_SOPORTADOS = [
+    "dijkstra", "bfs", "dfs", "greedy", "montecarlo", "bellmanford"
+];
+
 function parseDelimitedLine(line, separator = ",") {
     const values = [];
     let current = "";
@@ -900,11 +924,31 @@ app.post("/api/aeropuertos", (req, res) => {
     const data = readData();
     const { nombre, codigo, pais, ciudad, lat, lng, atractivo = "" } = req.body;
 
-    if (!nombre || !codigo || !pais || !ciudad || Number.isNaN(Number(lat)) || Number.isNaN(Number(lng))) {
-        return res.status(400).json({ error: "Nombre, código IATA, país, ciudad, latitud y longitud son obligatorios." });
+    const nombreLimpio = textoSeguro(nombre);
+    const paisLimpio = textoSeguro(pais, 60);
+    const ciudadLimpia = textoSeguro(ciudad, 60);
+    const atractivoLimpio = atractivo === "" ? "" : textoSeguro(atractivo, 500);
+
+    if (!nombreLimpio || !paisLimpio || !ciudadLimpia || atractivoLimpio === null) {
+        return res.status(400).json({
+            error: "Nombre, país y ciudad son obligatorios, sin los caracteres < ni >."
+        });
     }
 
-    const normalizedCode = String(codigo).trim().toUpperCase();
+    const latitud = numeroEnRango(lat, -90, 90);
+    const longitud = numeroEnRango(lng, -180, 180);
+
+    if (latitud === null || longitud === null) {
+        return res.status(400).json({
+            error: "La latitud debe estar entre -90 y 90, y la longitud entre -180 y 180."
+        });
+    }
+
+    const normalizedCode = String(codigo || "").trim().toUpperCase();
+
+    if (!/^[A-Z]{3}$/.test(normalizedCode)) {
+        return res.status(400).json({ error: "El código IATA son exactamente 3 letras." });
+    }
     const exists = data.aeropuertos.some((airport) => airport.codigo.toUpperCase() === normalizedCode);
     if (exists) {
         return res.status(409).json({ error: "Ya existe un aeropuerto con ese código IATA." });
@@ -912,13 +956,13 @@ app.post("/api/aeropuertos", (req, res) => {
 
     const airport = {
         id: nextId(data.aeropuertos),
-        nombre: String(nombre).trim(),
+        nombre: nombreLimpio,
         codigo: normalizedCode,
-        pais: String(pais).trim(),
-        ciudad: String(ciudad).trim(),
-        lat: Number(lat),
-        lng: Number(lng),
-        atractivo: String(atractivo || `Destino europeo registrado para operaciones de EuroSky Connect.`).trim()
+        pais: paisLimpio,
+        ciudad: ciudadLimpia,
+        lat: latitud,
+        lng: longitud,
+        atractivo: atractivoLimpio || "Destino europeo registrado para operaciones de EuroSky Connect."
     };
 
     data.aeropuertos.push(airport);
@@ -935,21 +979,40 @@ app.post("/api/aeronaves", (req, res) => {
     const { nombre, capacidad, costo_diario, autonomia_km, restricciones } = req.body;
     const maxCapacity = data.configuracion?.capacidad_maxima_pasajeros || 255;
 
-    if (!nombre || Number.isNaN(Number(capacidad)) || Number.isNaN(Number(costo_diario)) || Number.isNaN(Number(autonomia_km)) || !restricciones) {
-        return res.status(400).json({ error: "Nombre, capacidad, costo diario, autonomía y restricciones son obligatorios." });
+    const nombreLimpio = textoSeguro(nombre);
+    const restriccionesLimpias = textoSeguro(restricciones, 300);
+
+    if (!nombreLimpio || !restriccionesLimpias) {
+        return res.status(400).json({
+            error: "Nombre y restricciones son obligatorios, sin los caracteres < ni >."
+        });
     }
 
-    if (Number(capacidad) > maxCapacity) {
-        return res.status(400).json({ error: `La capacidad no puede superar ${maxCapacity} pasajeros.` });
+    // Antes solo se comprobaba que no fueran NaN, asi que una capacidad de
+    // -500 pasajeros o un costo negativo se guardaban sin queja.
+    const capacidadValida = numeroEnRango(capacidad, 1, maxCapacity);
+    const costoValido = numeroEnRango(costo_diario, 0, 10_000_000);
+    const autonomiaValida = numeroEnRango(autonomia_km, 1, 30_000);
+
+    if (capacidadValida === null) {
+        return res.status(400).json({
+            error: `La capacidad debe ser un numero entre 1 y ${maxCapacity} pasajeros.`
+        });
+    }
+
+    if (costoValido === null || autonomiaValida === null) {
+        return res.status(400).json({
+            error: "El costo diario y la autonomía deben ser números positivos."
+        });
     }
 
     const aircraft = {
         id: nextId(data.aeronaves || []),
-        nombre: String(nombre).trim(),
-        capacidad: Number(capacidad),
-        costo_diario: Number(costo_diario),
-        autonomia_km: Number(autonomia_km),
-        restricciones: String(restricciones).trim()
+        nombre: nombreLimpio,
+        capacidad: capacidadValida,
+        costo_diario: costoValido,
+        autonomia_km: autonomiaValida,
+        restricciones: restriccionesLimpias
     };
 
     data.aeronaves = data.aeronaves || [];
@@ -998,6 +1061,14 @@ app.get("/ruta", (req, res) => {
 
     if (!inicio || !fin) {
         return res.status(400).json({ error: "Debe enviar inicio y fin." });
+    }
+
+    // Antes, un algoritmo desconocido caia en Dijkstra sin avisar, asi que
+    // un error de tipeo en el cliente pasaba desapercibido.
+    if (!ALGORITMOS_SOPORTADOS.includes(algoritmo)) {
+        return res.status(400).json({
+            error: `Algoritmo no soportado. Opciones: ${ALGORITMOS_SOPORTADOS.join(", ")}.`
+        });
     }
 
     const result = runAlgorithm(data, algoritmo, inicio, fin, fecha);

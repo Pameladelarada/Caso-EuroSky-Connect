@@ -18,6 +18,20 @@ const formatPen = new Intl.NumberFormat("es-PE", {
 
 const formatNumber = new Intl.NumberFormat("es-PE");
 
+// Escapa texto antes de insertarlo en el DOM con innerHTML.
+// Los nombres de aeropuertos y ciudades llegan de POST /api/aeropuertos, asi
+// que sin esto un valor con HTML se ejecutaria en el navegador de cualquiera
+// que abriera la pagina (XSS almacenado).
+function esc(valor) {
+    return String(valor ?? "").replace(/[&<>"']/g, (caracter) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    }[caracter]));
+}
+
 window.initMap = function () {
     const europeCenter = { lat: 48.7, lng: 9.2 };
     const mapNode = document.getElementById("map");
@@ -73,7 +87,7 @@ function populateAirportSelects() {
     if (!inicio || !fin || !dataStore) return;
 
     const options = dataStore.aeropuertos
-        .map((airport) => `<option value="${airport.id}">${airport.ciudad} (${airport.codigo})</option>`)
+        .map((airport) => `<option value="${airport.id}">${esc(airport.ciudad)} (${esc(airport.codigo)})</option>`)
         .join("");
 
     inicio.innerHTML = options;
@@ -87,7 +101,7 @@ function populateDestinationFilter() {
     if (!filtro || !dataStore) return;
 
     filtro.innerHTML = dataStore.aeropuertos
-        .map((airport) => `<option value="${airport.id}">${airport.ciudad} (${airport.codigo})</option>`)
+        .map((airport) => `<option value="${airport.id}">${esc(airport.ciudad)} (${esc(airport.codigo)})</option>`)
         .join("");
 
     filtro.onchange = () => renderDestinationDetail(Number(filtro.value));
@@ -109,12 +123,12 @@ function renderDestinationDetail(airportId) {
     container.innerHTML = `
         <article class="destination-card featured">
             <div class="card-meta">
-                <span>${airport.codigo}</span>
-                <span>${airport.pais}</span>
+                <span>${esc(airport.codigo)}</span>
+                <span>${esc(airport.pais)}</span>
             </div>
-            <h3>${airport.ciudad}</h3>
-            <p><strong>Aeropuerto:</strong> ${airport.nombre}</p>
-            <p>${airport.atractivo || "Destino europeo registrado para operaciones y turismo."}</p>
+            <h3>${esc(airport.ciudad)}</h3>
+            <p><strong>Aeropuerto:</strong> ${esc(airport.nombre)}</p>
+            <p>${esc(airport.atractivo || "Destino europeo registrado para operaciones y turismo.")}</p>
         </article>
     `;
 }
@@ -131,13 +145,13 @@ function renderAirportMarkers() {
         const marker = new google.maps.Marker({
             position: { lat: airport.lat, lng: airport.lng },
             map,
-            title: `${airport.ciudad} (${airport.codigo})`
+            title: `${airport.ciudad} (${airport.codigo})`   // texto plano, no HTML
         });
 
         const info = new google.maps.InfoWindow({
             content: `
-                <strong>${airport.ciudad} (${airport.codigo})</strong>
-                <p>${airport.atractivo || "Aeropuerto europeo registrado."}</p>
+                <strong>${esc(airport.ciudad)} (${esc(airport.codigo)})</strong>
+                <p>${esc(airport.atractivo || "Aeropuerto europeo registrado.")}</p>
             `
         });
 
@@ -164,10 +178,10 @@ async function renderItineraries() {
                     <article class="itinerary-card">
                         <div class="card-meta">
                             <span>${itinerary.dias} días</span>
-                            <span>${itinerary.fuente}</span>
+                            <span>${esc(itinerary.fuente)}</span>
                         </div>
-                        <h3>${itinerary.nombre}</h3>
-                        <p>${itinerary.descripcion}</p>
+                        <h3>${esc(itinerary.nombre)}</h3>
+                        <p>${esc(itinerary.descripcion)}</p>
                         <p><strong>Secuencia:</strong> ${cities}</p>
                         <p><strong>Escalas:</strong> ${itinerary.resumen.cantidad_escalas}</p>
                     </article>
@@ -214,14 +228,14 @@ async function calculateRoute() {
 
 function renderRouteResult(result) {
     const resultBox = document.getElementById("resultadoRuta");
-    const path = result.secuencia.map((airport) => `<span>${airport.ciudad}</span>`).join("");
+    const path = result.secuencia.map((airport) => `<span>${esc(airport.ciudad)}</span>`).join("");
     const stops = result.escalas.length
-        ? result.escalas.map((stop) => `${stop.ciudad}, ${stop.pais}`).join(" | ")
+        ? result.escalas.map((stop) => `${esc(stop.ciudad)}, ${esc(stop.pais)}`).join(" | ")
         : "Vuelo directo";
 
     resultBox.classList.remove("empty-state");
     resultBox.innerHTML = `
-        <p class="tag">${result.algoritmo}</p>
+        <p class="tag">${esc(result.algoritmo)}</p>
         <div class="result-path">${path}</div>
 
         <div class="metric-grid">
@@ -305,11 +319,11 @@ function renderReport(report) {
     if (!section || !container) return;
 
     const sequenceText = report.secuencia_aeropuertos
-        .map((airport) => `${airport.ciudad} (${airport.codigo})`)
+        .map((airport) => `${esc(airport.ciudad)} (${esc(airport.codigo)})`)
         .join(" -> ");
 
     const stopText = report.escalas.length
-        ? report.escalas.map((stop) => `${stop.ciudad}, ${stop.pais} (${stop.codigo})`).join(" | ")
+        ? report.escalas.map((stop) => `${esc(stop.ciudad)}, ${esc(stop.pais)} (${esc(stop.codigo)})`).join(" | ")
         : "Vuelo directo";
 
     section.classList.remove("hidden");
@@ -319,11 +333,11 @@ function renderReport(report) {
         <div class="report-summary">
             <div>
                 <span>Recorrido seleccionado</span>
-                <strong>${report.origen?.ciudad || "-"} a ${report.destino?.ciudad || "-"}</strong>
+                <strong>${esc(report.origen?.ciudad || "-")} a ${esc(report.destino?.ciudad || "-")}</strong>
             </div>
             <div>
                 <span>Algoritmo</span>
-                <strong>${report.algoritmo}</strong>
+                <strong>${esc(report.algoritmo)}</strong>
             </div>
             <div>
                 <span>Fecha</span>
@@ -524,16 +538,16 @@ function renderAlgorithmRanking(group) {
 
     return `
         <article class="ranking-column">
-            <h3>${group.nombre}</h3>
+            <h3>${esc(group.nombre)}</h3>
             ${cards}
         </article>
     `;
 }
 
 function renderRankingCard(route, position) {
-    const path = route.secuencia.map((airport) => airport.codigo).join(" -> ");
-    const origin = route.secuencia[0]?.ciudad || "-";
-    const destination = route.secuencia[route.secuencia.length - 1]?.ciudad || "-";
+    const path = route.secuencia.map((airport) => esc(airport.codigo)).join(" -> ");
+    const origin = esc(route.secuencia[0]?.ciudad || "-");
+    const destination = esc(route.secuencia[route.secuencia.length - 1]?.ciudad || "-");
 
     return `
         <div class="ranking-card">
@@ -593,10 +607,10 @@ function renderComparisonSummary(results) {
 
     return `
         <div class="comparison-summary-grid">
-            <div><span>Menor costo</span><strong>${bestCost?.algoritmo_nombre || "-"}</strong></div>
-            <div><span>Menor tiempo</span><strong>${bestTime?.algoritmo_nombre || "-"}</strong></div>
-            <div><span>Mayor beneficio</span><strong>${bestProfit?.algoritmo_nombre || "-"}</strong></div>
-            <div><span>Menos escalas</span><strong>${bestStops?.algoritmo_nombre || "-"}</strong></div>
+            <div><span>Menor costo</span><strong>${esc(bestCost?.algoritmo_nombre || "-")}</strong></div>
+            <div><span>Menor tiempo</span><strong>${esc(bestTime?.algoritmo_nombre || "-")}</strong></div>
+            <div><span>Mayor beneficio</span><strong>${esc(bestProfit?.algoritmo_nombre || "-")}</strong></div>
+            <div><span>Menos escalas</span><strong>${esc(bestStops?.algoritmo_nombre || "-")}</strong></div>
         </div>
     `;
 }
@@ -605,7 +619,7 @@ function renderComparisonRow(result) {
     if (!result.disponible) {
         return `
             <tr class="comparison-unavailable">
-                <td>${result.algoritmo_nombre}</td>
+                <td>${esc(result.algoritmo_nombre)}</td>
                 <td colspan="7">No se encontró una ruta conectada para este algoritmo.</td>
                 <td>${result.tiempo_ejecucion_ms} ms</td>
             </tr>
@@ -624,7 +638,7 @@ function renderComparisonRow(result) {
 
     return `
         <tr>
-            <td><strong>${result.algoritmo_nombre}</strong>${badgeHtml}</td>
+            <td><strong>${esc(result.algoritmo_nombre)}</strong>${badgeHtml}</td>
             <td>${result.secuencia.join(" -> ")}</td>
             <td>${formatUsd.format(result.costo_total)}</td>
             <td>${formatUsd.format(result.ingreso_total)}</td>
