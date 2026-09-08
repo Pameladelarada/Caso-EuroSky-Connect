@@ -1,0 +1,13 @@
+# Normaliza los finales de linea: LF en el repositorio, nativo al trabajar.
+* text=auto eol=lf
+
+# Scripts de Windows: necesitan CRLF para ejecutarse correctamente
+*.ps1  text eol=crlf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Datos y binarios: no tocar
+*.csv  -text
+*.dat  -text
+*.exe  binary
+*.pptx binary
