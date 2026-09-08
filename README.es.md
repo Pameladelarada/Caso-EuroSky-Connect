@@ -9,9 +9,9 @@ Planificador de rutas aéreas europeas que compara **seis algoritmos de grafos**
 ![Node](https://img.shields.io/badge/Node.js-18%2B-339933)
 ![Licencia](https://img.shields.io/badge/licencia-MIT-green)
 
-<!-- TODO: reemplazar por una captura del mapa con una ruta trazada.
-     Guardar la imagen en docs/screenshot.png y descomentar la linea de abajo. -->
-<!-- ![Vista del planificador](docs/screenshot.png) -->
+![El planificador: una ruta calculada con Dijkstra sobre el mapa de aeropuertos](docs/planner.png)
+
+![Los seis algoritmos comparados para el mismo origen y destino](docs/algorithm-comparison.png)
 
 ---
 
@@ -36,7 +36,21 @@ Sobre ese grafo corren seis algoritmos y se comparan lado a lado, para mostrar q
 | **Greedy** | Heurística: prioriza el mejor tramo inmediato | `O((V+E) log V)` |
 | **Monte Carlo** | Aproximación por muestreo aleatorio | `O(k·V)` |
 
-**Hallazgo del caso:** Dijkstra y BFS rara vez coinciden. La ruta más barata suele tener más escalas que la ruta con menos escalas, y con el límite de 480 minutos de jornada a veces la más barata ni siquiera es operable.
+---
+
+## Qué encontré
+
+Ejecuté los seis algoritmos sobre **240 pares origen-destino** y comparé los resultados. Tres cosas merecen contarse.
+
+**Encontrar una ruta no es lo mismo que encontrar una que se pueda volar.** DFS devuelve siempre una ruta conectada, y **el 98 % de esas rutas excede la jornada de 480 minutos**. Promedia 12,9 escalas frente a las 0,3 de Dijkstra, con un costo 31 veces mayor. Conectividad y operabilidad son preguntas distintas, y un algoritmo que solo responde la primera no sirve aquí.
+
+**Minimizar el costo no es maximizar el beneficio.** Monte Carlo nunca es más barato que Dijkstra (0 % de los pares, que es justo lo que predice la optimalidad), y sin embargo devuelve una ruta *más rentable* en el **90 %** de ellos. El ingreso se acumula por tramo, así que la ruta más rentable es la más larga que todavía cabe en la jornada — casi lo contrario de la más barata. Decidir qué optimizar es una decisión de negocio, no algorítmica.
+
+**La heurística basta aquí, y por eso hace falta la exacta.** Greedy iguala el costo óptimo de Dijkstra en el **91 %** de los pares. En esta red el atajo casi siempre funciona; en el 9 % restante no, y sin el algoritmo exacto no hay forma de saber en cuál de los dos casos estás.
+
+La más barata y la más rápida también divergen, aunque menos de lo que esperaba: el **13 %** de los pares.
+
+*Método: `/api/comparacion` sobre todos los pares ordenados entre los primeros 16 aeropuertos; 240 pares con ruta bajo los seis algoritmos. Reproducible con el servidor levantado.*
 
 ---
 

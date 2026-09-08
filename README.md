@@ -9,9 +9,9 @@ A route planner for a European airline that compares **six graph algorithms** ov
 ![Node](https://img.shields.io/badge/Node.js-18%2B-339933)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-<!-- TODO: add a screenshot of the map with a route drawn on it.
-     Save it as docs/screenshot.png and uncomment the line below. -->
-<!-- ![The planner](docs/screenshot.png) -->
+![The planner: a route computed with Dijkstra over the airport map](docs/planner.png)
+
+![The six algorithms compared for the same origin and destination](docs/algorithm-comparison.png)
 
 ---
 
@@ -25,13 +25,17 @@ So instead of picking one algorithm, I implemented six and made the system compa
 
 ## What I found
 
-Running all six over the same network makes the trade-off concrete:
+I ran all six algorithms over **240 origin-destination pairs** and compared the results. Three of them are worth stating.
 
-- **Dijkstra and BFS rarely agree.** The cheapest route usually has more stops than the route with fewest stops, because cheap legs are short and numerous.
-- Under the 480-minute working-day limit, **the cheapest route is sometimes not operable at all** — the layovers push it past the ceiling. The optimum on paper is not the optimum in operations.
-- Greedy and Monte Carlo never beat Dijkstra's cost, which is exactly what theory predicts. Seeing that hold on real data was the point of implementing them.
+**Finding a route is not the same as finding one you can fly.** DFS returns a connected route every time — and **98% of those routes exceed the 480-minute working day**. It averages 12.9 stops against Dijkstra's 0.3, at 31× the cost. Connectivity and operability are different questions, and an algorithm that only answers the first one is useless here.
 
-That is the actual result of the project: not "here is a route finder", but *the criterion you optimise for changes the answer, and the operational constraint can invalidate the mathematical optimum.*
+**Minimising cost is not maximising profit.** Monte Carlo is never cheaper than Dijkstra (0% of pairs — exactly what optimality predicts), yet it returns a *more profitable* route in **90%** of them. Revenue accrues per leg, so the most profitable route is the longest one still inside the working day, which is close to the opposite of the cheapest. Deciding what to optimise is a business decision, not an algorithmic one.
+
+**The heuristic is good enough here — which is why you need the exact one.** Greedy matches Dijkstra's optimal cost in **91%** of pairs. On this network the shortcut almost always works; in the remaining 9% it does not, and without the exact algorithm there is no way to know which case you are in.
+
+Cheapest and fastest also diverge, though less often than I expected: **13%** of pairs.
+
+*Method: `/api/comparacion` over all ordered pairs among the first 16 airports, 240 pairs with a route under all six algorithms. Reproducible from the running server.*
 
 ---
 
