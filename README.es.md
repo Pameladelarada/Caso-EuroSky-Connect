@@ -109,6 +109,33 @@ Makefile                  Compilación y pruebas del motor C++
 
 ---
 
+## Notas de ingeniería
+
+Lo que vale la pena contar no son los algoritmos — esos son de libro. Es lo que pasa en los bordes.
+
+### Los algoritmos estaban bien; el manejo de la entrada no
+
+El motor compila limpio con `-Wall -Wextra -Wpedantic` y 26 de 27 aserciones de algoritmo pasaron a la primera. Pero en cuanto la entrada dejaba de ser la que el código esperaba, se rompía:
+
+- **Un ID de aeropuerto inexistente terminaba el programa.** La impresión de rutas resolvía cada nodo con `unordered_map::at()`, que lanza `std::out_of_range` si la clave no existe. Nadie lo capturaba. Bastaba escribir `999` en el menú.
+- **Una opción de menú no numérica provocaba un bucle infinito.** `cin.clear()` más `cin.ignore()` recupera de un error de formato, pero no detecta el fin de la entrada. Con stdin cerrado, la lectura fallaba en cada iteración y el menú se reimprimía sin parar — **9 705 078 líneas y 228 MB en cinco segundos**.
+
+La lección que me llevo: los fallos interesantes nunca estuvieron en el algoritmo. Estuvieron en la frontera entre mi código y el mundo exterior.
+
+### XSS almacenado en el registro de aeropuertos
+
+`POST /api/aeropuertos` guardaba `nombre`, `ciudad` y `atractivo` tal cual en `data.json`, y el frontend los renderizaba con `innerHTML`. Enviar `<img src=x onerror=...>` como nombre de aeropuerto persistía HTML ejecutable que luego corría para cualquier visitante posterior.
+
+Corregido en las dos capas, que es la parte que defendería en una revisión: **validación en el servidor** (rechazar `<` y `>`, limitar longitud) *y* **escapado en el cliente** (36 interpolaciones pasadas a salida escapada). Cualquiera de las dos por separado deja un hueco: el servidor no puede saber cómo renderizará el valor cada consumidor futuro, y el cliente no puede impedir que se almacene un dato malo.
+
+### Validación que aceptaba datos imposibles en silencio
+
+La comprobación era `Number.isNaN(Number(lat))`. Pero `Number(null)` es `0` y `Number("")` es `0` — ninguno es `NaN`, así que ambos pasaban, y el aeropuerto quedaba guardado en las coordenadas (0, 0), en el golfo de Guinea, a 5 000 km de Europa. El endpoint de aeronaves no comprobaba el signo, así que una capacidad de −500 pasajeros se aceptaba sin más.
+
+Ahora cada campo numérico pasa por un rango: latitud en [−90, 90], longitud en [−180, 180], capacidad entre 1 y el máximo configurado, y los códigos IATA contra `^[A-Z]{3}$`.
+
+---
+
 ## Cómo ejecutarlo
 
 ### Requisitos
@@ -218,6 +245,17 @@ Las rutas del caso se enriquecen con conectividad real de OpenFlights: 448 rutas
 
 ---
 
+## Pruebas y CI
+
+47 pruebas, sin más dependencias que las que el proyecto ya usaba:
+
+- **30 pruebas del motor** — aserciones planas y biblioteca estándar de C++, cubriendo los seis algoritmos más pruebas de regresión para el crash y el bucle infinito
+- **17 pruebas de la API** — el runner `node:test` integrado en Node, contra el servidor real, cubriendo las correcciones de seguridad y los rangos de validación
+
+El CI corre en cada push y cada pull request: el motor se compila y sus pruebas se ejecutan en **Ubuntu y macOS**, la API se prueba contra **Node 18, 20 y 22**, y dos pasos de regresión ejecutan el binario compilado directamente para los dos fallos de entrada descritos arriba.
+
+---
+
 ## Decisiones técnicas
 
 - **Sin librerías de grafos.** Los seis algoritmos están implementados a mano, en los dos motores. Es el punto del ejercicio: entender el costo real de cada estructura de datos. El motor en C++ es en su mayoría de Carlos Savero; en el de JavaScript, Dijkstra, BFS y DFS son míos.
@@ -239,6 +277,14 @@ Las rutas del caso se enriquecen con conectividad real de OpenFlights: 448 rutas
 - Monte Carlo es **no determinista**: dos ejecuciones pueden dar rutas distintas.
 - Los aeropuertos que se registran desde el menú del CLI (opciones 1 a 5) viven en una estructura aparte y todavía no se integran al grafo que usan los algoritmos.
 - La demanda esperada es un dato del caso, no una predicción.
+
+---
+
+## Qué haría después
+
+- Unificar los aeropuertos registrados desde el CLI con el grafo, eliminando el modelo de datos duplicado.
+- Sustituir el centinela `1e9` para "no hay ruta" por `std::optional<double>`, para que nadie pueda confundirlo con un costo real y caro.
+- Separar `server.js` en rutas y servicios; 1 082 líneas en un solo archivo es lo primero que comenta un revisor.
 
 ---
 
