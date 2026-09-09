@@ -227,6 +227,12 @@ CI runs on every push and pull request: the engine builds and its tests run on *
 - **JSON as storage.** Adequate for 36 nodes. Production would need a database: the file is rewritten in full on every `POST`.
 - **No front-end framework.** Plain HTML, CSS and JS, to keep the focus on the algorithms rather than the tooling.
 - **Validate on the server, escape on the client.** Both, not either.
+- **API keys never in the repository.** The Google Maps key is read from `.env`
+  and handed to the browser through `/api/config`, where it is restricted by HTTP
+  referrer. An earlier version had it hardcoded in `index.html`; that key has been
+  revoked. It is still visible in the commit history, which is the honest state of
+  things: rotating the credential is what closes the exposure, not rewriting
+  history.
 
 ## Known limitations
 

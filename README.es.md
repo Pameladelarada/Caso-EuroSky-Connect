@@ -224,6 +224,11 @@ Las rutas del caso se enriquecen con conectividad real de OpenFlights: 448 rutas
 - **JSON como almacenamiento.** Suficiente para el volumen del caso. Para producción haría falta una base de datos: el archivo se reescribe completo en cada `POST`.
 - **Frontend sin framework.** HTML, CSS y JS plano, para mantener el foco en los algoritmos y no en el tooling.
 - **Escapado en el cliente y validación en el servidor.** El detalle de destino se renderiza con plantillas, así que los campos de texto que vienen de la API se escapan antes de insertarse en el DOM y se validan al entrar.
+- **Las claves de API nunca en el repositorio.** La clave de Google Maps se lee
+  del `.env` y se entrega al navegador por `/api/config`, restringida por referrer
+  HTTP. Una versión anterior la tenía escrita en `index.html`; esa clave está
+  revocada. Sigue visible en el historial de commits, y así es como debe contarse:
+  lo que cierra la exposición es rotar la credencial, no reescribir el historial.
 - **`json.hpp` incluido en el repositorio.** Es la librería nlohmann/json en un solo header. Va versionada para que el proyecto compile sin instalar nada.
 
 ---
