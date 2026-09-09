@@ -4,6 +4,10 @@
 
 Planificador de rutas aéreas europeas que compara **seis algoritmos de grafos** sobre una red real de aeropuertos y evalúa cada ruta por costo, tiempo, escalas y rentabilidad.
 
+**Es un proyecto universitario de cuatro personas.** Mi parte es el servidor
+Node, la interfaz completa y las implementaciones en JavaScript de Dijkstra, BFS
+y DFS — ver [Quién escribió qué](#quién-escribió-qué).
+
 [![CI](https://github.com/Pameladelarada/Caso-EuroSky-Connect/actions/workflows/ci.yml/badge.svg)](https://github.com/Pameladelarada/Caso-EuroSky-Connect/actions/workflows/ci.yml)
 ![C++](https://img.shields.io/badge/C%2B%2B-17-00599C)
 ![Node](https://img.shields.io/badge/Node.js-18%2B-339933)
@@ -216,7 +220,7 @@ Las rutas del caso se enriquecen con conectividad real de OpenFlights: 448 rutas
 
 ## Decisiones técnicas
 
-- **Sin librerías de grafos.** Los seis algoritmos están implementados desde cero. Es el punto del ejercicio: entender el costo real de cada estructura de datos.
+- **Sin librerías de grafos.** Los seis algoritmos están implementados a mano, en los dos motores. Es el punto del ejercicio: entender el costo real de cada estructura de datos. El motor en C++ es en su mayoría de Carlos Savero; en el de JavaScript, Dijkstra, BFS y DFS son míos.
 - **JSON como almacenamiento.** Suficiente para el volumen del caso. Para producción haría falta una base de datos: el archivo se reescribe completo en cada `POST`.
 - **Frontend sin framework.** HTML, CSS y JS plano, para mantener el foco en los algoritmos y no en el tooling.
 - **Escapado en el cliente y validación en el servidor.** El detalle de destino se renderiza con plantillas, así que los campos de texto que vienen de la API se escapan antes de insertarse en el DOM y se validan al entrar.
@@ -230,6 +234,48 @@ Las rutas del caso se enriquecen con conectividad real de OpenFlights: 448 rutas
 - Monte Carlo es **no determinista**: dos ejecuciones pueden dar rutas distintas.
 - Los aeropuertos que se registran desde el menú del CLI (opciones 1 a 5) viven en una estructura aparte y todavía no se integran al grafo que usan los algoritmos.
 - La demanda esperada es un dato del caso, no una predicción.
+
+---
+
+## Quién escribió qué
+
+Medido con `git blame` sobre `main`, antes de las correcciones. 4 101 líneas de
+código, sin contar `json.hpp`, que es de terceros.
+
+| Parte | Mío | De otros |
+|---|---|---|
+| `public/script.js`, `public/style.css` | **1 438 / 1 438** | — |
+| `server.js` | **977 / 1 082** | Carlos 105 |
+| `public/index.html` | **178 / 181** | Carlos 3 |
+| `main.cpp` (menú CLI) | **317 / 445** | dominith 95, Carlos 33 |
+| `Algoritmos.cpp` | 8 / 136 | **Carlos 128** |
+| `Grafo.cpp` + `Grafo.h` | 0 / 57 | **Carlos 57** |
+| `greedy.h`, `montecarlo.h`, `bellmanford.h` | 3 / 171 | **Carlos 168** |
+| `CostoRentabilidad.cpp` + `.h` | 0 / 22 | **Carlos 22** |
+| **Total** | **3 469 (85%)** | 632 (15%) |
+
+El reparto no es uniforme, y el resumen honesto es este: **la aplicación web es
+mía, el motor de algoritmos en C++ es en su mayoría de Carlos Savero.**
+
+Dentro del motor en JavaScript de `server.js`, que sí escribí yo, la autoría
+también está repartida:
+
+| Función | Mía | De Carlos |
+|---|---|---|
+| `dijkstra`, `bfs`, `dfs` | **162 / 162** | — |
+| `buildGraph`, `compareAlgorithms` | **102 / 102** | — |
+| `runAlgorithm` | 228 / 243 | 15 |
+| `monteCarlo` | 19 / 52 | 33 |
+| `greedy`, `bellmanFord` | 2 / 59 | **57** |
+
+Así que los algoritmos que puedo explicar en detalle son **Dijkstra, BFS y
+DFS**, más el banco de comparación que ejecuta los seis y toda la medición
+descrita en *Qué encontré*.
+
+También contribuyeron **dominith** (menú CLI) y **fra2804**.
+
+Las correcciones de regresión, las suites de pruebas y el CI son trabajo
+posterior, ya terminado el proyecto de equipo.
 
 ---
 
