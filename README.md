@@ -4,6 +4,10 @@
 
 A route planner for a European airline that compares **six graph algorithms** over a real network of airports, and scores every route by cost, time, stops and profit.
 
+**This is a four-person university project.** My part is the Node server, the
+entire front end, and the JavaScript implementations of Dijkstra, BFS and DFS —
+see [Who wrote what](#who-wrote-what).
+
 [![CI](https://github.com/Pameladelarada/Caso-EuroSky-Connect/actions/workflows/ci.yml/badge.svg)](https://github.com/Pameladelarada/Caso-EuroSky-Connect/actions/workflows/ci.yml)
 ![C++](https://img.shields.io/badge/C%2B%2B-17-00599C)
 ![Node](https://img.shields.io/badge/Node.js-18%2B-339933)
@@ -56,7 +60,10 @@ The network is modelled as a **directed weighted graph**:
 | **Greedy** | Heuristic: best immediate leg | `O((V+E) log V)` |
 | **Monte Carlo** | Approximation by random sampling | `O(k·V)` |
 
-All six are implemented from scratch. No graph libraries — understanding the real cost of each data structure was the point.
+All six are implemented from scratch, twice — once in C++ and once in JavaScript.
+No graph libraries; understanding the real cost of each data structure was the
+point. The C++ engine is mostly Carlos Savero's
+work; in the JavaScript engine, Dijkstra, BFS and DFS are mine.
 
 ### Two engines, one source of truth
 
@@ -216,10 +223,16 @@ CI runs on every push and pull request: the engine builds and its tests run on *
 
 ## Design decisions
 
-- **No graph libraries.** All six algorithms are hand-written.
+- **No graph libraries.** All six algorithms are hand-written, in both engines.
 - **JSON as storage.** Adequate for 36 nodes. Production would need a database: the file is rewritten in full on every `POST`.
 - **No front-end framework.** Plain HTML, CSS and JS, to keep the focus on the algorithms rather than the tooling.
 - **Validate on the server, escape on the client.** Both, not either.
+- **API keys never in the repository.** The Google Maps key is read from `.env`
+  and handed to the browser through `/api/config`, where it is restricted by HTTP
+  referrer. An earlier version had it hardcoded in `index.html`; that key has been
+  revoked. It is still visible in the commit history, which is the honest state of
+  things: rotating the credential is what closes the exposure, not rewriting
+  history.
 
 ## Known limitations
 
@@ -233,6 +246,48 @@ CI runs on every push and pull request: the engine builds and its tests run on *
 - Unify the CLI's manually registered airports with the graph, removing the duplicate data model.
 - Replace the `1e9` sentinel for "no route" with `std::optional<double>`, so callers cannot confuse it with a real, expensive cost.
 - Split `server.js` into routes and services; 1,011 lines in one file is the thing a reviewer comments on first.
+
+---
+
+## Who wrote what
+
+Measured with `git blame` on `main`, before the fixes described in the
+engineering notes. 4 101 lines of code, excluding the vendored `json.hpp`.
+
+| Area | Mine | Others |
+|---|---|---|
+| `public/script.js`, `public/style.css` | **1 438 / 1 438** | — |
+| `server.js` | **977 / 1 082** | Carlos 105 |
+| `public/index.html` | **178 / 181** | Carlos 3 |
+| `main.cpp` (CLI menu) | **317 / 445** | dominith 95, Carlos 33 |
+| `Algoritmos.cpp` | 8 / 136 | **Carlos 128** |
+| `Grafo.cpp` + `Grafo.h` | 0 / 57 | **Carlos 57** |
+| `greedy.h`, `montecarlo.h`, `bellmanford.h` | 3 / 171 | **Carlos 168** |
+| `CostoRentabilidad.cpp` + `.h` | 0 / 22 | **Carlos 22** |
+| **Total** | **3 469 (85%)** | 632 (15%) |
+
+The split is not uniform, and the honest summary is this: **the web application
+is mine, the C++ algorithm engine is largely Carlos Savero's.**
+
+Within the JavaScript engine in `server.js`, which I did write, the ownership is
+also mixed:
+
+| Function | Mine | Carlos's |
+|---|---|---|
+| `dijkstra`, `bfs`, `dfs` | **162 / 162** | — |
+| `buildGraph`, `compareAlgorithms` | **102 / 102** | — |
+| `runAlgorithm` | 228 / 243 | 15 |
+| `monteCarlo` | 19 / 52 | 33 |
+| `greedy`, `bellmanFord` | 2 / 59 | **57** |
+
+So the algorithms I can speak to in detail are **Dijkstra, BFS and DFS**, plus
+the comparison harness that runs all six and the whole measurement described in
+*What I found*.
+
+Also contributing: **dominith** (CLI menu) and **fra2804**.
+
+The regression fixes, the test suites and the CI described above are later work,
+after the team project ended.
 
 ---
 
