@@ -237,9 +237,9 @@ Los montos se muestran en USD y en PEN.
 
 | Fuente | Registros | Uso |
 |---|---|---|
-| [OurAirports](https://ourairports.com/data/) | 9 056 aeropuertos | Coordenadas, tipo, país ISO |
+| [OurAirports](https://ourairports.com/data/) | 9 056 aeropuertos con código IATA (de 85 576 en el dataset) | Coordenadas, tipo, país ISO |
 | [OpenFlights](https://openflights.org/data.html) | 67 663 rutas | Conectividad real entre aeropuertos |
-| `data.json` | 36 aeropuertos / 534 rutas | Datos operativos del caso |
+| `data.json` | 36 aeropuertos / 86 rutas (534 tras el enriquecimiento) | Datos operativos del caso |
 
 Las rutas del caso se enriquecen con conectividad real de OpenFlights: 448 rutas adicionales se derivan de las fuentes externas y 42 rutas del JSON llevan demanda calculada a partir de ellas.
 

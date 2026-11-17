@@ -202,9 +202,9 @@ Amounts are shown in USD and PEN.
 
 | Source | Records | Used for |
 |---|---|---|
-| [OurAirports](https://ourairports.com/data/) | 9,056 airports | Coordinates, type, ISO country |
+| [OurAirports](https://ourairports.com/data/) | 9,056 airports with an IATA code (of 85,576 in the dataset) | Coordinates, type, ISO country |
 | [OpenFlights](https://openflights.org/data.html) | 67,663 routes | Real connectivity between airports |
-| `data.json` | 36 airports / 534 routes | The case's operational data |
+| `data.json` | 36 airports / 86 routes (534 after enrichment) | The case's operational data |
 
 The case's routes are enriched with real connectivity: 448 additional routes are derived from the external sources, and 42 routes carry demand computed from them.
 
